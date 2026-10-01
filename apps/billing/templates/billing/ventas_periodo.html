@@ -1,0 +1,159 @@
+{% extends "layouts/app.html" %}
+{% load i18n humanize %}
+
+{% block title %}{% translate "Ventas" %} {{ resumen.periodo_glosa }} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:ventas' %}">{% translate "Ventas" %}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">{{ resumen.periodo_glosa }}</li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3 gap-3 flex-wrap">
+    <h1 class="h3 mb-0">{% translate "Ventas" %} — {{ resumen.periodo_glosa }}</h1>
+    <div class="d-flex gap-2">
+      <a href="{% url 'billing:ventas_periodo_rcv_resumen' resumen.periodo %}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-building-columns fa-fw"></i> {% translate "Ver RCV en el SII" %}
+      </a>
+      <div class="btn-group" role="group">
+        <a href="{% url 'billing:ventas_periodo' resumen.periodo_anterior %}"
+           class="btn btn-outline-secondary" title="{% translate 'Período anterior' %}">
+          <i class="fa-solid fa-chevron-left"></i>
+        </a>
+        <a href="{% url 'billing:ventas_periodo' resumen.periodo_siguiente %}"
+           class="btn btn-outline-secondary" title="{% translate 'Período siguiente' %}">
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-3 text-center">
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <p class="small text-muted mb-1">{% translate "Documentos" %}</p>
+          <p class="fs-4 mb-0">{{ resumen.documentos }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <p class="small text-muted mb-1">{% translate "Neto" %}</p>
+          <p class="fs-4 mb-0">${{ resumen.neto|intcomma:False }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <p class="small text-muted mb-1">IVA</p>
+          <p class="fs-4 mb-0">${{ resumen.iva|intcomma:False }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <p class="small text-muted mb-1">{% translate "Total" %}</p>
+          <p class="fs-4 mb-0">${{ resumen.total|intcomma:False }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3" id="ventas_resumen-tipo-card">
+    <div class="card-header">{% translate "Resumen por tipo de documento" %}</div>
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr class="text-muted">
+            <th class="ps-3">{% translate "Tipo" %}</th>
+            <th class="text-end">{% translate "Documentos" %}</th>
+            <th class="text-end">{% translate "Neto" %}</th>
+            <th class="text-end">{% translate "Exento" %}</th>
+            <th class="text-end">IVA</th>
+            <th class="text-end pe-3">{% translate "Total" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for fila in resumen.por_tipo %}
+            <tr>
+              <td class="ps-3">{{ fila.tipo_dte.label }}</td>
+              <td class="text-end">{{ fila.documentos }}</td>
+              <td class="text-end">${{ fila.neto|intcomma:False }}</td>
+              <td class="text-end">${{ fila.exento|intcomma:False }}</td>
+              <td class="text-end">${{ fila.iva|intcomma:False }}</td>
+              <td class="text-end pe-3">${{ fila.total|intcomma:False }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="ventas_documentos-card">
+    <div class="card-header">{% translate "Documentos del período" %}</div>
+    <div class="card-body p-0">
+      <div id="tabla-ventas-documentos"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      new Tabulator('#tabla-ventas-documentos', {
+        layout: 'fitColumns',
+        placeholder: '{% translate "Sin documentos" %}',
+        // Reutiliza el mismo endpoint que `emitidos.html`, acotado a
+        // este período (ver `DteEmitidoListView.get_queryset()`).
+        ajaxURL: '{% url "billing_api:emitidos" %}',
+        ajaxParams: {periodo: '{{ resumen.periodo }}'},
+        pagination: true,
+        paginationMode: 'remote',
+        paginationSize: 20,
+        filterMode: 'remote',
+        sortMode: 'remote',
+        columns: [
+          {
+            title: '{% translate "Documento" %}', field: 'tipo', width: 220,
+            headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Folio" %}', field: 'folio', width: 90,
+            headerFilter: 'input', headerFilterFunc: '=',
+          },
+          {
+            title: '{% translate "Receptor" %}', field: 'receptor',
+            widthGrow: 2, minWidth: 180, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Fecha" %}', field: 'fecha', width: 130,
+            headerFilter: 'input',
+            formatter: function (cell) {
+              var value = cell.getValue();
+              if (!value) return '';
+              var partes = value.split('-');
+              return partes[2] + '/' + partes[1] + '/' + partes[0];
+            },
+          },
+          {
+            title: '{% translate "Total" %}', field: 'total', hozAlign: 'right',
+            formatter: 'money', formatterParams: {symbol: '$', precision: 0},
+            width: 120, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Estado SII" %}', field: 'estado',
+            widthGrow: 1, minWidth: 160, headerFilter: 'input',
+          },
+        ],
+      });
+    });
+  </script>
+{% endblock %}

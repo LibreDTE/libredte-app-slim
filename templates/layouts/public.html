@@ -1,0 +1,40 @@
+{% load i18n %}<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}LibreDTE Slim{% endblock %}</title>
+  {% include "_assets_css.html" %}
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'public:welcome' %}">LibreDTE Slim</a>
+      <div class="navbar-nav ms-auto">
+        {% if user.is_authenticated %}
+          <a class="nav-link" href="{% url 'core:dashboard' %}">{% translate "Dashboard" %}</a>
+        {% else %}
+          <a class="nav-link" href="{% url 'login' %}">{% translate "Iniciar sesión" %}</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  {% block body %}
+    <main class="container py-4">
+      {% include "_messages.html" %}
+      {% block content %}{% endblock %}
+    </main>
+  {% endblock %}
+
+  <footer class="border-top py-3 mt-5 text-muted small">
+    <div class="container">
+      &copy; {% now "Y" %} LibreDTE Slim.
+    </div>
+  </footer>
+
+  {% include "_assets_js.html" %}
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

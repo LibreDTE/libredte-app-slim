@@ -1,0 +1,60 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Receptor" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:receptores' %}">{% translate "Receptores" %}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">
+    {% if object %}{% translate "Editar receptor" %}{% else %}{% translate "Nuevo receptor" %}{% endif %}
+  </li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">
+    {% if object %}{% translate "Editar receptor" %}{% else %}{% translate "Nuevo receptor" %}{% endif %}
+  </h1>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="card mb-3">
+      <div class="card-header">{% translate "Identificación" %}</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">{% include "_field.html" with field=form.rut %}</div>
+          <div class="col-md-4">{% include "_field.html" with field=form.razon_social %}</div>
+          <div class="col-md-4">{% include "_field.html" with field=form.giro %}</div>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-4">{% include "_field.html" with field=form.codigo_interno %}</div>
+          <div class="col-md-4">{% include "_field.html" with field=form.telefono %}</div>
+          <div class="col-md-4">{% include "_field.html" with field=form.correo %}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">{% translate "Ubicación" %}</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-8">{% include "_field.html" with field=form.direccion %}</div>
+          <div class="col-md-4">{% include "_field.html" with field=form.comuna %}</div>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-4">{% include "_field.html" with field=form.pais %}</div>
+          <div class="col-md-4">{% include "_field.html" with field=form.ciudad %}</div>
+          <div class="col-md-4">{% include "_field.html" with field=form.numero_identificacion %}</div>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">{% translate "Guardar" %}</button>
+    <a href="{% url 'billing:receptores' %}" class="btn btn-outline-secondary btn-volver">
+      {% translate "Cancelar" %}
+    </a>
+  </form>
+{% endblock %}

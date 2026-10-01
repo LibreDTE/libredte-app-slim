@@ -1,0 +1,39 @@
+{% extends "layouts/public.html" %}
+{% load i18n form_extras %}
+
+{% block title %}{% translate "Crear administrador" %} — LibreDTE Slim{% endblock %}
+
+{% block body %}
+<main class="d-flex justify-content-center py-5">
+  <div class="card shadow-sm" style="width: 100%; max-width: 420px;">
+    <div class="card-body p-4">
+      {% include "_messages.html" %}
+      <h1 class="h4 mb-3">{% translate "Crear el primer usuario" %}</h1>
+      <p class="text-muted small">
+        {% translate "Todavía no hay ningún usuario. Este será el administrador de esta instalación de LibreDTE." %}
+      </p>
+
+      <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="mb-3">
+            <label for="{{ field.id_for_label }}" class="form-label">
+              {{ field.label }}
+            </label>
+            {{ field|add_class:"form-control" }}
+            {% if field.help_text %}
+              <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary w-100">
+          {% translate "Crear usuario" %}
+        </button>
+      </form>
+    </div>
+  </div>
+</main>
+{% endblock %}

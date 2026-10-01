@@ -1,0 +1,39 @@
+{% load i18n %}
+<table class="table table-sm mb-0">
+  <tr>
+    <td class="text-muted">{% translate "RUT" %}</td>
+    <td class="text-end">{{ datos.rut|default:"—" }}</td>
+  </tr>
+  <tr>
+    <td class="text-muted">{% translate "Razón social" %}</td>
+    <td class="text-end">{{ datos.razon_social|default:"—" }}</td>
+  </tr>
+  <tr>
+    <td class="text-muted">{% translate "N.° de resolución" %}</td>
+    <td class="text-end">
+      {{ datos.resolucion.numero|default_if_none:"—" }}
+    </td>
+  </tr>
+  <tr>
+    <td class="text-muted">{% translate "Fecha de resolución" %}</td>
+    <td class="text-end">
+      {{ datos.resolucion.fecha|default_if_none:"—" }}
+    </td>
+  </tr>
+  <tr>
+    <td class="text-muted">{% translate "Software declarado" %}</td>
+    <td class="text-end">{{ datos.software.nombre|default:"—" }}</td>
+  </tr>
+  <tr>
+    <td class="text-muted">{% translate "Correo administrador" %}</td>
+    <td class="text-end">{{ datos.emails.administrador|default:"—" }}</td>
+  </tr>
+  <tr>
+    <td class="text-muted">{% translate "Correo SII" %}</td>
+    <td class="text-end">{{ datos.emails.sii|default:"—" }}</td>
+  </tr>
+  <tr>
+    <td class="text-muted">{% translate "Correo intercambio" %}</td>
+    <td class="text-end">{{ datos.emails.intercambio|default:"—" }}</td>
+  </tr>
+</table>

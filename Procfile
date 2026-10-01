@@ -1,0 +1,3 @@
+web: gunicorn --bind :8000 --workers 9 --threads 4 --worker-class gthread --timeout 300 --keep-alive 5 --max-requests 2000 --max-requests-jitter 200 --log-level info --access-logformat '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"' config.wsgi:application
+celery_worker_slim_1_default: celery -A config worker -Q default --concurrency=3 -n worker_slim_1_default.%%h -l INFO --without-gossip --without-mingle --without-heartbeat
+celery_worker_slim_1_emision_masiva: celery -A config worker -Q emision_masiva --concurrency=2 --prefetch-multiplier=1 -n worker_slim_1_emision_masiva.%%h -l INFO --without-gossip --without-mingle --without-heartbeat

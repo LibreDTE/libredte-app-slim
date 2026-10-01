@@ -1,0 +1,25 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Ítem" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing_settings:items' %}">{% translate "Ítems" %}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">
+    {% if object %}{% translate "Editar ítem" %}{% else %}{% translate "Nuevo ítem" %}{% endif %}
+  </li>
+{% endblock %}
+
+{% block settings_content %}
+  <h1 class="h3 mb-3">
+    {% if object %}{% translate "Editar ítem" %}{% else %}{% translate "Nuevo ítem" %}{% endif %}
+  </h1>
+  <div class="col-md-8">
+    <form method="post">
+      {% include "_form_fields.html" %}
+    </form>
+  </div>
+{% endblock %}

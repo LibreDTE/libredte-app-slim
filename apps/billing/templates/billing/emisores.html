@@ -1,0 +1,77 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Emisores" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Emisores" %}</li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">{% translate "Emisores" %}</h1>
+  <div id="tabla-emisores"></div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // `0` es un pk que nunca existe de verdad — sirve de placeholder
+      // para armar la URL de detalle en JS sin hardcodear la ruta acá
+      // (mismo criterio que `receptores.html`).
+      var detalleUrlBase = '{% url "billing:emisor_detalle" 0 %}'.slice(0, -2);
+
+      new Tabulator('#tabla-emisores', {
+        layout: 'fitColumns',
+        placeholder: '{% translate "Sin datos" %}',
+
+        // Paginación/filtro/orden en el servidor — ver
+        // `billing.api.views.EmisorListView`.
+        ajaxURL: '{% url "billing_api:emisores" %}',
+        pagination: true,
+        paginationMode: 'remote',
+        paginationSize: 20,
+        filterMode: 'remote',
+        sortMode: 'remote',
+
+        columns: [
+          {
+            title: 'RUT', field: 'rut', width: 120,
+            headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Código interno" %}', field: 'codigo_interno',
+            width: 140, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Razón social" %}', field: 'razon_social',
+            widthGrow: 2, minWidth: 180, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Giro" %}', field: 'giro',
+            widthGrow: 2, minWidth: 160, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Comuna/ciudad" %}', field: 'ubicacion',
+            widthGrow: 1, minWidth: 140, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Correo" %}', field: 'correo',
+            widthGrow: 1, minWidth: 160, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Acciones" %}', field: 'id', width: 100,
+            hozAlign: 'center', headerSort: false,
+            formatter: function (cell) {
+              var href = detalleUrlBase + cell.getValue() + '/';
+              return '<a href="' + href + '" class="btn btn-sm btn-outline-primary" '
+                + 'title="{% translate "Ver" %}" aria-label="{% translate "Ver" %}">'
+                + '<i class="fa-solid fa-eye fa-fw"></i></a>';
+            },
+          },
+        ],
+      });
+    });
+  </script>
+{% endblock %}

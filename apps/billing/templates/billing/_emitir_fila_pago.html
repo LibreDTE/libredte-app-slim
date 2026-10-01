@@ -1,0 +1,13 @@
+{% load i18n %}
+<tr>
+  <td>{% include "_widget_errors.html" with field=subform.FchPago %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.MntPago %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.GlosaPagos %}</td>
+  <td>
+    <span class="d-none">{{ subform.DELETE }}</span>
+    <button type="button" class="btn btn-sm btn-outline-danger btn-quitar-fila"
+            title="{% translate 'Quitar' %}" aria-label="{% translate 'Quitar' %}">
+      <i class="fa-solid fa-trash fa-fw"></i>
+    </button>
+  </td>
+</tr>

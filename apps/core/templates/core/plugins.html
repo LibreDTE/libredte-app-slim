@@ -1,0 +1,20 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Plugins" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Plugins" %}</li>
+{% endblock %}
+
+{% block settings_content %}
+  <h1 class="h3 mb-3">{% translate "Plugins" %}</h1>
+  {% if deprecated_active_labels %}
+    <div class="alert alert-warning">
+      {% translate "Tienes plugins deprecados activos:" %}
+      {{ deprecated_active_labels|join:", " }}.
+    </div>
+  {% endif %}
+  {% include "_table.html" with table_id="plugin-table" data_id="plugin-data" columns_id="plugin-columns" rows=rows columns=columns %}
+{% endblock %}

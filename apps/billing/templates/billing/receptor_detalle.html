@@ -1,0 +1,254 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{{ receptor.razon_social|default:receptor.rut }} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:receptores' %}">{% translate "Receptores" %}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">
+    {{ receptor.razon_social|default:receptor.rut }}
+  </li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-start justify-content-between mb-3 gap-3 flex-wrap">
+    <div>
+      <h1 class="h3 mb-1">{{ receptor.razon_social|default:"—" }}</h1>
+      <span class="text-muted">RUT {{ receptor.rut }}-{{ receptor.dv }}</span>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'billing:receptor_editar' receptor.pk %}"
+         class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-pen fa-fw"></i> {% translate "Editar" %}
+      </a>
+      <a href="{% url 'billing:receptores' %}" class="btn btn-outline-secondary btn-sm btn-volver">
+        <i class="fa-solid fa-arrow-left fa-fw"></i> {% translate "Volver" %}
+      </a>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link active" id="datos-tab" data-bs-toggle="tab"
+         href="#datos" role="tab" aria-controls="datos">
+        {% translate "Datos" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="documentos-tab" data-bs-toggle="tab"
+         href="#documentos" role="tab" aria-controls="documentos">
+        {% translate "Documentos" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="avanzado-tab" data-bs-toggle="tab"
+         href="#avanzado" role="tab" aria-controls="avanzado">
+        {% translate "Avanzado" %}
+      </a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="datos" role="tabpanel"
+         aria-labelledby="datos-tab">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card h-100" id="datos_generales-card">
+            <div class="card-header">{% translate "Datos generales" %}</div>
+            <div class="card-body p-0">
+              <table class="table table-sm mb-0">
+                <tr>
+                  <td class="ps-3 text-muted">RUT</td>
+                  <td class="pe-3 text-end">{{ receptor.rut }}-{{ receptor.dv }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Código interno" %}</td>
+                  <td class="pe-3 text-end">{{ receptor.codigo_interno|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Razón social" %}</td>
+                  <td class="pe-3 text-end">{{ receptor.razon_social|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Giro" %}</td>
+                  <td class="pe-3 text-end">{{ receptor.giro|default:"—" }}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card h-100" id="datos_contacto-card">
+            <div class="card-header">{% translate "Contacto y ubicación" %}</div>
+            <div class="card-body p-0">
+              <table class="table table-sm mb-0">
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Teléfono" %}</td>
+                  <td class="pe-3 text-end">{{ receptor.telefono|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Correo" %}</td>
+                  <td class="pe-3 text-end">{{ receptor.correo|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Dirección" %}</td>
+                  <td class="pe-3 text-end">{{ receptor.direccion|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">
+                    {% if receptor.es_extranjero %}{% translate "País" %}{% else %}{% translate "Comuna" %}{% endif %}
+                  </td>
+                  <td class="pe-3 text-end">
+                    {% if receptor.es_extranjero %}
+                      {{ receptor.ciudad|default:"—" }}, {{ receptor.pais.glosa }}
+                    {% else %}
+                      {{ receptor.comuna.glosa|default:"—" }}
+                    {% endif %}
+                  </td>
+                </tr>
+                {% if receptor.es_extranjero %}
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "N.° identificación" %}</td>
+                  <td class="pe-3 text-end">{{ receptor.numero_identificacion|default:"—" }}</td>
+                </tr>
+                {% endif %}
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="documentos" role="tabpanel"
+         aria-labelledby="documentos-tab">
+      <div id="tabla-receptor-documentos"></div>
+    </div>
+
+    <div class="tab-pane fade" id="avanzado" role="tabpanel"
+         aria-labelledby="avanzado-tab">
+      <div class="card border-danger" id="avanzado_eliminar-card">
+        <div class="card-header text-danger">
+          {% translate "Eliminar receptor" %}
+        </div>
+        <div class="card-body">
+          {% if borradores_count or dtes_emitidos_count %}
+            <p class="mb-2">
+              {% translate "No se puede eliminar: este receptor tiene" %}
+              {% if dtes_emitidos_count %}
+                {% blocktranslate count n=dtes_emitidos_count %}{{ n }} documento emitido{% plural %}{{ n }} documentos emitidos{% endblocktranslate %}
+              {% endif %}
+              {% if dtes_emitidos_count and borradores_count %}{% translate "y" %}{% endif %}
+              {% if borradores_count %}
+                {% blocktranslate count n=borradores_count %}{{ n }} borrador{% plural %}{{ n }} borradores{% endblocktranslate %}
+              {% endif %}
+              {% translate "asociados." %}
+            </p>
+          {% else %}
+            <p class="mb-2">
+              {% translate "Esta acción no se puede deshacer." %}
+            </p>
+            <a href="{% url 'billing:receptor_eliminar' receptor.pk %}"
+               class="btn btn-outline-danger btn-sm">
+              <i class="fa-solid fa-trash fa-fw"></i> {% translate "Eliminar receptor" %}
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // `0` es un pk que nunca existe de verdad — sirve de placeholder
+      // para armar la URL de detalle en JS sin hardcodear la ruta acá
+      // (mismo criterio que en `emitidos.html`).
+      var detalleUrlBase = '{% url "billing:emitido_detalle" 0 %}'.slice(0, -2);
+
+      // `receptor_id` acota `billing_api:emitidos` a este receptor —
+      // ver `DteEmitidoListView.get_queryset()`. Mismas columnas/
+      // filtros/acción "Ver" que `emitidos.html`, salvo la columna
+      // "Receptor" (redundante acá: la tabla entera ya es de este
+      // receptor). La tabla se crea ya (aunque su tab empiece oculto)
+      // y se le pide `redraw()` recién al mostrarla (mismo criterio
+      // que `folio_detalle.html`): Tabulator calcula anchos de columna
+      // con el contenedor visible.
+      window.tabulators = window.tabulators || {};
+      window.tabulators['tabla-receptor-documentos'] = new Tabulator(
+        '#tabla-receptor-documentos',
+        {
+          layout: 'fitColumns',
+          placeholder: '{% translate "Sin documentos emitidos a este receptor" %}',
+          ajaxURL: '{% url "billing_api:emitidos" %}',
+          ajaxParams: {receptor_id: '{{ receptor.pk }}'},
+          pagination: true,
+          paginationMode: 'remote',
+          paginationSize: 20,
+          filterMode: 'remote',
+          sortMode: 'remote',
+          columns: [
+            {
+              title: '{% translate "Documento" %}', field: 'tipo', width: 220,
+              headerFilter: 'input',
+            },
+            {
+              title: '{% translate "Folio" %}', field: 'folio', width: 90,
+              headerFilter: 'input', headerFilterFunc: '=',
+            },
+            {
+              title: '{% translate "Fecha" %}', field: 'fecha', width: 130,
+              headerFilter: 'input',
+              formatter: function (cell) {
+                var value = cell.getValue();
+                if (!value) return '';
+                var partes = value.split('-');
+                return partes[2] + '/' + partes[1] + '/' + partes[0];
+              },
+            },
+            {
+              title: '{% translate "Total" %}', field: 'total', hozAlign: 'right',
+              formatter: 'money', formatterParams: {symbol: '$', precision: 0},
+              width: 120, headerFilter: 'input',
+            },
+            {
+              title: '{% translate "Estado SII" %}', field: 'estado',
+              widthGrow: 1, minWidth: 200, headerFilter: 'input',
+            },
+            {
+              title: '{% translate "Acciones" %}', field: 'id', width: 100,
+              hozAlign: 'center', headerSort: false,
+              formatter: function (cell) {
+                var href = detalleUrlBase + cell.getValue() + '/';
+                return '<a href="' + href + '" class="btn btn-sm btn-outline-primary" '
+                  + 'title="{% translate "Ver" %}" aria-label="{% translate "Ver" %}">'
+                  + '<i class="fa-solid fa-eye fa-fw"></i></a>';
+              },
+            },
+          ],
+        },
+      );
+
+      // Al entrar directo con "#documentos" en la URL, `Tabs.init()`
+      // (ver `_derafu_js.html`) ya deja la pestaña activa ANTES de que
+      // este script alcance a suscribirse a `shown.bs.tab` — el
+      // evento se pierde y la tabla queda con el layout roto
+      // (Tabulator calculó anchos de columna con el tab todavía
+      // oculto). Por eso también se revisa el estado actual al
+      // cargar, no solo el evento futuro.
+      const tabDocumentos = document.getElementById('documentos-tab');
+      function redibujarTablaDocumentos() {
+        if (tabDocumentos.classList.contains('active')) {
+          window.tabulators['tabla-receptor-documentos'].redraw(true);
+        }
+      }
+      tabDocumentos.addEventListener('shown.bs.tab', redibujarTablaDocumentos);
+      redibujarTablaDocumentos();
+    });
+  </script>
+{% endblock %}

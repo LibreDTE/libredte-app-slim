@@ -1,0 +1,94 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Recibidos" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Recibidos" %}</li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{% translate "Recibidos" %}</h1>
+    <a href="{% url 'billing:recibido_subir' %}" class="btn btn-primary">
+      <i class="fa-solid fa-upload fa-fw"></i> {% translate "Subir XML" %}
+    </a>
+  </div>
+  <div id="tabla-recibidos"></div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // `0` es un pk que nunca existe de verdad — sirve de placeholder
+      // para armar la URL de detalle en JS sin hardcodear la ruta acá
+      // (mismo criterio que `emitidos.html`).
+      var detalleUrlBase = '{% url "billing:recibido_detalle" 0 %}'.slice(0, -2);
+
+      new Tabulator('#tabla-recibidos', {
+        layout: 'fitColumns',
+        placeholder: '{% translate "Sin datos" %}',
+
+        // Paginación/filtro/orden en el servidor — ver
+        // `billing.api.views.DteRecibidoListView`.
+        ajaxURL: '{% url "billing_api:recibidos" %}',
+        pagination: true,
+        paginationMode: 'remote',
+        paginationSize: 20,
+        filterMode: 'remote',
+        sortMode: 'remote',
+
+        columns: [
+          {
+            title: '{% translate "Documento" %}', field: 'tipo', width: 260,
+            headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Folio" %}', field: 'folio', width: 90,
+            headerFilter: 'input', headerFilterFunc: '=',
+          },
+          {
+            // Un solo filtro busca en nombre y RUT del emisor a la vez
+            // (ver `DteRecibidoListView._LOOKUP_MAP`).
+            title: '{% translate "Emisor" %}', field: 'emisor',
+            widthGrow: 2, minWidth: 180, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Fecha" %}', field: 'fecha', width: 130,
+            headerFilter: 'input',
+            formatter: function (cell) {
+              var value = cell.getValue();
+              if (!value) return '';
+              var partes = value.split('-');
+              return partes[2] + '/' + partes[1] + '/' + partes[0];
+            },
+          },
+          {
+            title: '{% translate "Total" %}', field: 'total', hozAlign: 'right',
+            formatter: 'money', formatterParams: {symbol: '$', precision: 0},
+            width: 120, headerFilter: 'input',
+          },
+          {
+            // Sin headerFilter: `estado_rcv()` es un método derivado,
+            // no una columna real — no es filtrable/ordenable vía ORM
+            // (ver `DteRecibidoListView`).
+            title: '{% translate "Estado RCV" %}', field: 'estado',
+            widthGrow: 2, minWidth: 180,
+          },
+          {
+            title: '{% translate "Acciones" %}', field: 'id', width: 100,
+            hozAlign: 'center', headerSort: false,
+            formatter: function (cell) {
+              var href = detalleUrlBase + cell.getValue() + '/';
+              return '<a href="' + href + '" class="btn btn-sm btn-outline-primary" '
+                + 'title="{% translate "Ver" %}" aria-label="{% translate "Ver" %}">'
+                + '<i class="fa-solid fa-eye fa-fw"></i></a>';
+            },
+          },
+        ],
+      });
+    });
+  </script>
+{% endblock %}

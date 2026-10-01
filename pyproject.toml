@@ -1,0 +1,186 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "libredte-slim"
+version = "0.1.0"
+description = "App Django de facturacion electronica (DTE) de LibreDTE."
+readme = "README.rst"
+license = { file = "COPYING" }
+authors = [
+  { name = "LibreDTE" },
+]
+requires-python = ">=3.14"
+dependencies = [
+  "django==6.1.*",
+  "libredte-lib-sdk==0.6.*",
+  "djangorestframework>=3.15",
+  "djangorestframework-tabulator==0.1.*",
+  "python-dotenv",
+  # Validación/formato de RUT chileno. Cero dependencias propias,
+  # mantenida activamente (ver CLAUDE.md).
+  "rutificador",
+  # Driver de Postgres (ver `DB_ENGINE` en `config/settings.py`) —
+  # siempre instalado para que activar Postgres sea solo cambiar env
+  # vars, sin un paso de instalación aparte; sqlite (el default) no lo
+  # usa pero no tiene costo relevante tenerlo instalado igual.
+  "psycopg[binary]>=3.1",
+  # Cifrado en reposo de campos sensibles (ver `apps/core/fields.py`,
+  # `FIELD_ENCRYPTION_KEY`).
+  "cryptography>=42",
+  # Requerido por `ImageField` (`Contribuyente.logo`) para validar que
+  # el archivo subido sea una imagen real.
+  "pillow>=11",
+  # Lee el fixture de escenarios de `DteRecibido` (`seed_demo`) — ver
+  # `apps/billing/fixtures/dte_recibidos.yaml`.
+  "pyyaml>=6",
+  # TOTP del segundo factor de autenticación (ver `apps/core/totp.py`).
+  "pyotp>=2.9",
+  # Esquema OpenAPI + Swagger/ReDoc de la API pública (ver
+  # `SPECTACULAR_SETTINGS` en `config/settings.py`).
+  "drf-spectacular>=0.30",
+  # Código QR para enrolar el TOTP en la app autenticadora — se genera
+  # en el servidor (SVG embebido) en vez de con una librería JS, así la
+  # página de perfil no depende de JS para mostrarlo.
+  "qrcode>=8",
+  # Cliente de la API de www.apigateway.cl (consultas al SII) — usado
+  # por el plugin `apigatewaycl` (ver `apps/libredte/plugins/apigatewaycl/`).
+  "apigatewaycl==6.0.*",
+  # Lee la planilla de emisión masiva (ver
+  # `apps/billing/utils/spreadsheet.py`). Sin `pandas`/`numpy` detrás:
+  # acá solo se recorren filas, no se analiza nada.
+  "openpyxl>=3.1",
+  # Cola de tareas (ver `config/celery.py`).
+  "celery>=5.5",
+  "billiard>=4.2,<4.3",
+  "redis>=6",
+  "django-celery-results>=2.6",
+  # Servidor WSGI de producción (ver `Procfile`).
+  "gunicorn>=23",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff",
+  "pytest",
+  "pytest-django",
+  "mypy",
+  "django-stubs",
+  "djangorestframework-stubs",
+  # `qrcode` no trae `py.typed` — sin estos stubs, `mypy --strict` no
+  # puede analizar el import (`pyotp` sí lo trae, no necesita stubs).
+  "types-qrcode",
+  # `openpyxl` tampoco trae `py.typed` — mismo motivo que `types-qrcode`.
+  "types-openpyxl",
+  # Stubs de `celery` y `kombu`.
+  "celery-types",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["config"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+testpaths = ["apps"]
+addopts = "-ra -m 'not live'"
+markers = [
+  "live: hits the real LibreDTE Lib API over the network; excluded by default, run with `pytest -m live`.",
+]
+
+[tool.mypy]
+python_version = "3.14"
+plugins = ["mypy_django_plugin.main"]
+files = ["apps", "config"]
+exclude = ["migrations/"]
+strict = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings"
+
+[tool.ruff]
+
+include = ["**/*.py", "**/*.pyi"]
+
+exclude = [
+  ".git",
+  "__pycache__",
+  ".venv",
+  "venv",
+  "**/migrations/*.py",
+]
+
+line-length = 79
+target-version = "py314"
+respect-gitignore = true
+fix = true
+
+[tool.ruff.lint]
+
+select = [
+  "D",
+  "F",
+  "E",
+  "W",
+  "I",
+  "UP",
+  "N",
+  "B",
+  "A",
+  "C90",
+  "ARG",
+  "DTZ",
+  "TRY",
+  "SLF",
+  "ERA",
+  "PL",
+  "RUF",
+  "DJ",
+]
+
+ignore = [
+  "D100",
+  "D101",
+  "D102",
+  "D104",
+  "D105",
+  "D106",
+  "D203",
+  "D212",
+  "D401",
+  "TRY400",
+  "N818",
+  "UP031",
+  "TRY003",
+  "ARG001",
+  "Q001",
+  "ERA001",
+  "PLC0415",
+  "N802",
+  "N806",
+  # Los `Meta` de Django (`ordering`, `constraints`, ...) son leídos como
+  # configuración por el metaclass del ORM, nunca instanciados — no
+  # aplica el riesgo de estado mutable compartido que RUF012 asume.
+  "RUF012",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["config", "apps"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 25
+
+[tool.ruff.lint.pylint]
+max-args = 10
+max-branches = 25
+max-statements = 60
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests.py" = ["D", "SLF", "PLR2004"]
+"**/tests/**" = ["D", "SLF", "PLR2004"]
+"**/test_*.py" = ["D", "SLF", "PLR2004"]
+"config/settings.py" = ["D", "E501"]
+
+[tool.ruff.format]
+quote-style = "single"

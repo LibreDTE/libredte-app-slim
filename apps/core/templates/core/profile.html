@@ -1,0 +1,264 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Mi perfil" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Mi perfil" %}</li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">{% translate "Mi perfil" %}</h1>
+
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link active" id="data-tab" data-bs-toggle="tab"
+         href="#data" role="tab" aria-controls="data">
+        {% translate "Datos básicos" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="security-tab" data-bs-toggle="tab"
+         href="#security" role="tab" aria-controls="security">
+        {% translate "Seguridad" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="api-tab" data-bs-toggle="tab"
+         href="#api" role="tab" aria-controls="api">
+        {% translate "API" %}
+      </a>
+    </li>
+    {% for section in profile_sections %}
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="{{ section.tab_id }}-tab" data-bs-toggle="tab"
+           href="#{{ section.tab_id }}" role="tab" aria-controls="{{ section.tab_id }}">
+          {{ section.label }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="data" role="tabpanel"
+         aria-labelledby="data-tab">
+      <div class="card" id="data_user-card">
+        <div class="card-header">{% translate "Datos básicos" %}</div>
+        <div class="card-body">
+          <form method="post" action="{% url 'profile' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="data">
+            {% include "_field.html" with field=form_data.username %}
+            {% include "_field.html" with field=form_data.first_name %}
+            {% include "_field.html" with field=form_data.last_name %}
+            {% include "_field.html" with field=form_data.email %}
+            <button type="submit" class="btn btn-primary">
+              {% translate "Guardar" %}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="security" role="tabpanel"
+         aria-labelledby="security-tab">
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="card h-100" id="security_password-card">
+            <div class="card-header">{% translate "Cambiar contraseña" %}</div>
+            <div class="card-body">
+              <form method="post" action="{% url 'profile' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="password">
+                {% include "_field.html" with field=form_password.old_password %}
+                {% include "_field.html" with field=form_password.new_password1 %}
+                {% include "_field.html" with field=form_password.new_password2 %}
+                <button type="submit" class="btn btn-primary">
+                  {% translate "Cambiar contraseña" %}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card h-100" id="security_2fa-card">
+            <div class="card-header">
+              {% translate "Verificación en dos pasos (2FA)" %}
+            </div>
+            <div class="card-body">
+              {% if two_factor %}
+                <div class="h-100 d-flex flex-column justify-content-center text-center">
+                  <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle mx-auto"
+                        style="width: 3.5rem; height: 3.5rem;">
+                    <i class="fa-solid fa-shield-halved fa-lg text-success"></i>
+                  </span>
+                  <p class="fw-semibold mt-3 mb-1">
+                    {% translate "Verificación activada" %}
+                  </p>
+                  <p class="text-muted small mb-3">
+                    {% blocktranslate with fecha=two_factor.created_at|date:"DATE_FORMAT" %}Desde el {{ fecha }}{% endblocktranslate %}
+                  </p>
+                  <p class="text-muted small mb-4">
+                    {% translate "Al iniciar sesión se te pedirá el código de tu aplicación autenticadora, además de la contraseña." %}
+                  </p>
+                  <form method="post"
+                        action="{% url 'profile_two_factor_deactivate' %}"
+                        onsubmit="return confirm('{% translate "¿Seguro que quieres desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo por la contraseña." %}');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                      <i class="fa-solid fa-toggle-off fa-fw"></i> {% translate "Desactivar" %}
+                    </button>
+                  </form>
+                </div>
+              {% else %}
+                <div class="row g-4">
+                  <div class="col-12 text-center">
+                    <img src="{{ two_factor_qr }}" alt="{% translate "Código QR" %}"
+                         class="img-fluid" style="max-width: 220px;">
+                    <p class="form-text mt-2 mb-1">
+                      {% translate "¿No puedes escanearlo? Ingresa esta clave a mano:" %}
+                    </p>
+                    <code class="user-select-all">{{ two_factor_secret }}</code>
+                  </div>
+                  <div class="col-12">
+                    <p>
+                      {% translate "Escanea el código QR con una aplicación autenticadora (Google Authenticator, Authy, 1Password, ...) y luego confirma con el código que te muestre." %}
+                    </p>
+                    <form method="post" action="{% url 'profile_two_factor_activate' %}">
+                      {% csrf_token %}
+                      {% include "_field.html" with field=form_two_factor.two_factor_code %}
+                      <button type="submit" class="btn btn-primary">
+                        {% translate "Activar" %}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="api" role="tabpanel"
+         aria-labelledby="api-tab">
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="card h-100" id="api_token-card">
+            <div class="card-header">{% translate "Token de API" %}</div>
+            <div class="card-body">
+              {% if api_token %}
+                <div class="input-group mb-2">
+                  <span class="input-group-text">
+                    <i class="fa-solid fa-key fa-fw"></i>
+                  </span>
+                  <input type="password" class="form-control font-monospace"
+                         value="{{ api_token.key }}" readonly autocomplete="off"
+                         aria-label="{% translate 'Token de API' %}">
+                  <a class="input-group-text"
+                     style="cursor:pointer;text-decoration:none"
+                     onclick="FormFields.showPassword(this)"
+                     aria-label="{% translate 'Mostrar u ocultar el token' %}"
+                     title="{% translate 'Mostrar u ocultar el token' %}">
+                    <i class="fa-regular fa-eye fa-fw"></i>
+                  </a>
+                  <a class="input-group-text"
+                     style="cursor:pointer;text-decoration:none"
+                     onclick="UI.copy(this.closest('.input-group').querySelector('input'), '{% translate "Token copiado." %}')"
+                     aria-label="{% translate 'Copiar el token' %}"
+                     title="{% translate 'Copiar el token' %}">
+                    <i class="fa-regular fa-copy fa-fw"></i>
+                  </a>
+                </div>
+                <p class="text-muted small mb-3">
+                  {% blocktranslate with fecha=api_token.created|date:"DATE_FORMAT" %}Creado el {{ fecha }}{% endblocktranslate %}
+                </p>
+                <div class="alert alert-warning small" role="alert">
+                  <i class="fa-solid fa-triangle-exclamation fa-fw"></i>
+                  {% translate "Trátalo como una contraseña: quien lo tenga entra a tu cuenta sin el código de verificación en dos pasos." %}
+                </div>
+                <div class="d-flex gap-2">
+                  <form method="post"
+                        action="{% url 'profile_api_token_generate' %}"
+                        onsubmit="return confirm('{% translate "Al generar uno nuevo, el token actual deja de funcionar de inmediato. ¿Continuar?" %}');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                      <i class="fa-solid fa-rotate fa-fw"></i> {% translate "Generar uno nuevo" %}
+                    </button>
+                  </form>
+                  <form method="post"
+                        action="{% url 'profile_api_token_delete' %}"
+                        onsubmit="return confirm('{% translate "El token dejará de funcionar de inmediato. ¿Eliminarlo?" %}');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                      <i class="fa-solid fa-trash fa-fw"></i> {% translate "Eliminar" %}
+                    </button>
+                  </form>
+                </div>
+              {% else %}
+                <div class="h-100 d-flex flex-column justify-content-center text-center">
+                  <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-body-secondary mx-auto"
+                        style="width: 3.5rem; height: 3.5rem;">
+                    <i class="fa-solid fa-key fa-lg text-secondary"></i>
+                  </span>
+                  <p class="fw-semibold mt-3 mb-1">
+                    {% translate "Todavía no tienes un token" %}
+                  </p>
+                  <p class="text-muted small mb-4">
+                    {% translate "Lo necesitas para que un programa externo consulte tus documentos sin usar tu contraseña." %}
+                  </p>
+                  <form method="post"
+                        action="{% url 'profile_api_token_generate' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-sm">
+                      <i class="fa-solid fa-key fa-fw"></i> {% translate "Generar token" %}
+                    </button>
+                  </form>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100" id="api_docs-card">
+            <div class="card-header">{% translate "Cómo usarla" %}</div>
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="small">
+                  {% translate "El token va en la cabecera de cada llamada:" %}
+                </span>
+                <a style="cursor:pointer;text-decoration:none"
+                   onclick="UI.copy(document.getElementById('api_curl'), '{% translate "Comando copiado." %}')"
+                   aria-label="{% translate 'Copiar el comando' %}"
+                   title="{% translate 'Copiar el comando' %}">
+                  <i class="fa-regular fa-copy fa-fw"></i>
+                </a>
+              </div>
+              <pre class="bg-body-tertiary border rounded p-2 small mb-3 mt-1 overflow-auto"><code id="api_curl">curl -H "Authorization: Token &lt;token&gt;" \
+  {{ request.scheme }}://{{ request.get_host }}/api/emitidos/</code></pre>
+              <p class="small mb-2">
+                {% translate "La referencia de cada recurso, con sus filtros y ejemplos:" %}
+              </p>
+              <a href="{% url 'api_docs' %}" target="_blank"
+                 class="btn btn-outline-primary btn-sm">
+                <i class="fa-solid fa-flask fa-fw"></i> {% translate "Ver y probar la API" %}
+              </a>
+              <p class="form-text mt-2 mb-0">
+                {% translate "En «Probar la API» usa el botón Authorize e ingresa el valor completo, con el prefijo: Token <token>." %}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% for section in profile_sections %}
+      <div class="tab-pane fade" id="{{ section.tab_id }}" role="tabpanel"
+           aria-labelledby="{{ section.tab_id }}-tab">
+        {{ section.html }}
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}
+

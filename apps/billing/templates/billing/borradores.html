@@ -1,0 +1,107 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Borradores" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Borradores" %}</li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{% translate "Borradores" %}</h1>
+    <a href="{% url 'billing:emitir' %}" class="btn btn-primary">
+      {% translate "+ Nuevo borrador" %}
+    </a>
+  </div>
+  <div id="tabla-borradores"></div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // `0` es un pk que nunca existe de verdad — sirve de placeholder
+      // para armar la URL de detalle en JS sin hardcodear la ruta acá
+      // (mismo criterio que `emitidos.html`).
+      var detalleUrlBase = '{% url "billing:borrador_detalle" 0 %}'.slice(0, -2);
+
+      new Tabulator('#tabla-borradores', {
+        layout: 'fitColumns',
+        placeholder: '{% translate "Sin borradores" %}',
+
+        // Paginación/filtro/orden en el servidor — ver
+        // `billing.api.views.BorradorListView`.
+        ajaxURL: '{% url "billing_api:borradores" %}',
+        pagination: true,
+        paginationMode: 'remote',
+        paginationSize: 20,
+        filterMode: 'remote',
+        sortMode: 'remote',
+
+        columns: [
+          {
+            // Ancho fijo (no `widthGrow`): las glosas más largas
+            // ("Nota de crédito de exportación") no pasan de ~260px;
+            // dárselo también como `widthGrow` lo dejaba compitiendo
+            // con "Receptor" por el espacio sobrante y quedaba
+            // demasiado ancho para su contenido real.
+            title: '{% translate "Documento" %}', field: 'tipo', width: 260,
+            headerFilter: 'input',
+          },
+          {
+            // Derivado del `pk` (ver `Borrador.codigo`) — no es una
+            // columna real, no se puede ordenar en el servidor, pero sí
+            // filtrar (`BorradorListView._filtrar_por_codigo`): busca
+            // tanto por el código completo ("33-0000100") como solo por
+            // los últimos 7 dígitos ("0000100" o "100").
+            title: '{% translate "Código" %}', field: 'codigo', width: 130,
+            headerSort: false, headerFilter: 'input',
+          },
+          {
+            // Única columna que crece: absorbe el espacio sobrante de
+            // la tabla — nombres de receptor son los más variables en
+            // largo. Un solo filtro busca en nombre y RUT a la vez
+            // (ver `BorradorListView._LOOKUP_MAP`).
+            title: '{% translate "Receptor" %}', field: 'receptor',
+            widthGrow: 1, minWidth: 200, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Fecha" %}', field: 'fecha', width: 130,
+            headerFilter: 'input',
+            // La fecha del propio documento (`Encabezado.IdDoc
+            // .FchEmis`), no cuándo se creó la fila — puede ser pasada
+            // o futura. La hora de creación real solo se muestra en el
+            // detalle (mismo criterio que `emitidos.html`/`DteEmitido`).
+            formatter: function (cell) {
+              var value = cell.getValue();
+              if (!value) return '';
+              var partes = value.split('-');
+              return partes[2] + '/' + partes[1] + '/' + partes[0];
+            },
+          },
+          {
+            title: '{% translate "Total" %}', field: 'total', hozAlign: 'right',
+            formatter: 'money', formatterParams: {symbol: '$', precision: 0},
+            width: 120, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Usuario" %}', field: 'usuario', width: 110,
+            headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Acciones" %}', field: 'id', width: 100,
+            hozAlign: 'center', headerSort: false,
+            formatter: function (cell) {
+              var href = detalleUrlBase + cell.getValue() + '/';
+              return '<a href="' + href + '" class="btn btn-sm btn-outline-primary" '
+                + 'title="{% translate "Ver" %}" aria-label="{% translate "Ver" %}">'
+                + '<i class="fa-solid fa-eye fa-fw"></i></a>';
+            },
+          },
+        ],
+      });
+    });
+  </script>
+{% endblock %}

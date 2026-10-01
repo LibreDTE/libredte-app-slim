@@ -1,0 +1,206 @@
+<script>
+  (function () {
+    function applyThemeIcon(theme) {
+      var icon = document.getElementById('icon-theme');
+      if (!icon) return;
+      icon.classList.toggle('fa-moon', theme !== 'dark');
+      icon.classList.toggle('fa-sun', theme === 'dark');
+    }
+
+    function save(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch (error) {
+        // Sin persistencia si localStorage no está disponible — el
+        // toggle igual funciona para la sesión actual.
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      applyThemeIcon(document.documentElement.getAttribute('data-bs-theme') || 'light');
+
+      var themeButton = document.getElementById('btn-toggle-theme');
+      if (themeButton) {
+        themeButton.addEventListener('click', function () {
+          var current = document.documentElement.getAttribute('data-bs-theme') || 'light';
+          var next = current === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-bs-theme', next);
+          applyThemeIcon(next);
+          save('slim-theme', next);
+        });
+      }
+
+      var sidebarButton = document.getElementById('btn-toggle-sidebar');
+      if (sidebarButton) {
+        sidebarButton.addEventListener('click', function () {
+          var collapsed = document.documentElement.getAttribute('data-sidebar') === 'collapsed';
+          document.documentElement.setAttribute('data-sidebar', collapsed ? 'expanded' : 'collapsed');
+          save('slim-sidebar-collapsed', collapsed ? '0' : '1');
+        });
+      }
+
+      // Botones "Volver" (`.btn-volver`): su `href` es un destino fijo
+      // razonable (ej. el listado "natural" de esa página), pero no es
+      // necesariamente de dónde vino quien lo hace clic — puede haber
+      // llegado desde otro lado (ej. desde un receptor a un documento
+      // emitido). Si el referrer es de esta misma app, se prefiere
+      // volver por historial de verdad; si no (entró por marcador o
+      // URL directa, sin referrer propio), se deja navegar al `href`
+      // tal cual — nunca queda sin destino.
+      document.addEventListener('click', function (event) {
+        var button = event.target.closest('.btn-volver');
+        if (!button) return;
+        if (document.referrer.indexOf(window.location.origin + '/') === 0) {
+          event.preventDefault();
+          history.back();
+        }
+      });
+
+      // Formularios con `data-submit-lock="Texto…"`: al enviarse, el
+      // botón que lo envió se apaga y muestra ese texto con un spinner,
+      // para que un doble clic no repita una acción con efectos (pedir
+      // folios al SII, enviar un DTE, etc.). Se hace en el `submit` del
+      // formulario y no en el `click` del botón: apagarlo antes de que
+      // el envío arranque lo cancelaría. Si un `onsubmit` canceló el
+      // envío (ej. un `confirm()` rechazado) no se apaga nada.
+      // `data-submit-lock-unless="campo=valor"` deja el botón habilitado
+      // cuando ese campo tiene ese valor al enviar (ej. un modo que
+      // responde con una descarga y no sale de la página).
+      document.addEventListener('submit', function (event) {
+        var form = event.target;
+        if (!form.hasAttribute('data-submit-lock') || event.defaultPrevented) {
+          return;
+        }
+        var unless = form.getAttribute('data-submit-lock-unless');
+        if (unless) {
+          var separator = unless.indexOf('=');
+          var field = form.elements[unless.slice(0, separator)];
+          if (field && field.value === unless.slice(separator + 1)) {
+            return;
+          }
+        }
+        var button = event.submitter || form.querySelector('[type="submit"]');
+        if (!button) return;
+        // Un control apagado no se envía: si el botón lleva `name`, su
+        // valor viaja en un campo oculto para que la vista lo reciba.
+        if (button.name) {
+          var hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = button.name;
+          hidden.value = button.value;
+          hidden.setAttribute('data-submit-lock-hidden', '');
+          form.appendChild(hidden);
+        }
+        button.dataset.submitLockHtml = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML =
+          '<i class="fa-solid fa-spinner fa-spin fa-fw"></i> '
+          + form.getAttribute('data-submit-lock');
+      });
+    });
+
+    // Al volver con "Atrás", el navegador puede restaurar la página
+    // desde su caché tal como quedó, con el botón todavía apagado: se
+    // devuelve a su estado original.
+    window.addEventListener('pageshow', function (event) {
+      if (!event.persisted) return;
+      document.querySelectorAll('[data-submit-lock-hidden]').forEach(function (hidden) {
+        hidden.remove();
+      });
+      document.querySelectorAll('[data-submit-lock-html]').forEach(function (button) {
+        button.innerHTML = button.dataset.submitLockHtml;
+        button.disabled = false;
+        delete button.dataset.submitLockHtml;
+      });
+    });
+  })();
+</script>
+<script>
+  /**
+   * Inicializa el editor JSON (librería JSONEditor) sobre uno o más
+   * campos (input/textarea) — reemplaza cada campo por un editor
+   * visual, mantenido en sincronía con el valor real del campo (así
+   * un formulario que lo envuelva sigue funcionando sin cambios).
+   *
+   * @param {string} selector - Selector de los campos a reemplazar
+   *   (por defecto, `.slim-json-editor`).
+   * @param {object} options - Opciones para `JSONEditor` (se mezclan
+   *   con las por defecto de acá).
+   */
+  function initializeJsonEditor(selector, options) {
+    if (selector === undefined) {
+      selector = '.slim-json-editor';
+    }
+
+    var defaultOptions = {
+      language: 'es',
+      modes: ['tree', 'code', 'preview'],
+      mode: 'code',
+      showErrorTable: ['code', 'preview'],
+      enableSort: false,
+      enableTransform: false,
+      onError: function (error) {
+        console.error('Error del editor JSON:', error);
+      },
+    };
+
+    if (options === undefined) {
+      options = defaultOptions;
+    } else {
+      options = Object.assign({}, defaultOptions, options);
+    }
+
+    document.querySelectorAll(selector).forEach(function (field) {
+      // El valor actual del campo es el JSON inicial — si está vacío o
+      // no es JSON válido, se parte de un objeto vacío.
+      var initialJson = {};
+      var rawValue = field.value.trim();
+      if (rawValue) {
+        try {
+          initialJson = JSON.parse(rawValue);
+        } catch (error) {
+          console.warn(
+            'initializeJsonEditor: no se pudo parsear el valor inicial.',
+            error,
+          );
+        }
+      }
+
+      // El contenedor del editor se inserta justo después del campo —
+      // el campo original queda oculto pero sigue en el DOM (así un
+      // formulario que lo envuelva lo sigue enviando).
+      var container = document.createElement('div');
+      container.classList.add('slim-json-editor-container');
+
+      var minHeight = 350;
+      var fieldHeight = field.offsetHeight || 0;
+      container.style.height = Math.max(fieldHeight, minHeight) + 'px';
+
+      field.insertAdjacentElement('afterend', container);
+      field.style.display = 'none';
+
+      var label = field.parentElement.querySelector('label');
+      if (label) {
+        label.style.display = 'none';
+      }
+
+      var editorOptions = Object.assign({}, options, {
+        onChange: function () {
+          try {
+            var json = editor.get();
+            field.value = JSON.stringify(json);
+          } catch (error) {
+            // El contenido puede quedar temporalmente inválido
+            // mientras se escribe (sobre todo en modo 'code') — se
+            // ignora hasta que vuelva a ser válido.
+          }
+          if (typeof options.onChange === 'function') {
+            options.onChange.apply(this, arguments);
+          }
+        },
+      });
+
+      var editor = new JSONEditor(container, editorOptions, initialJson);
+    });
+  }
+</script>

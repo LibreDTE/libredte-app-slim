@@ -1,0 +1,23 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Cargar CAF" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+  <li class="breadcrumb-item"><a href="{% url 'billing_settings:folios' %}">{% translate "Folios" %}</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Cargar CAF" %}</li>
+{% endblock %}
+
+{% block settings_content %}
+  <h1 class="h3 mb-3">{% translate "Cargar CAF" %}</h1>
+  <p class="text-muted">
+    {% translate "Sube el archivo XML del Código de Autorización de Folios (CAF) descargado desde el sitio del SII." %}
+  </p>
+  <div class="col-md-6">
+    <form method="post" enctype="multipart/form-data"
+          data-submit-lock="{% translate 'Cargando CAF…' %}">
+      {% include "_form_fields.html" %}
+    </form>
+  </div>
+{% endblock %}

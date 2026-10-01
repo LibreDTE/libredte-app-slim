@@ -1,0 +1,45 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Enviar al SII" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:emitidos' %}">{% translate "Emitidos" %}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:emitido_detalle' documento.pk %}">
+      {{ documento.tipo_dte.label }} N.° {{ documento.folio }}
+    </a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Enviar al SII" %}</li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">{% translate "Enviar al SII" %}</h1>
+  <p>
+    {% blocktranslate with tipo=documento.tipo_dte.label folio=documento.folio ambiente=documento.contribuyente.ambiente %}
+      Esto envía el documento "{{ tipo }}" N.° {{ folio }} al SII de
+      verdad (ambiente: {{ ambiente }}) — no se puede deshacer.
+    {% endblocktranslate %}
+  </p>
+  {% if documento.contribuyente.certificado %}
+    <form method="post" data-submit-lock="{% translate 'Enviando al SII…' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary">
+        <i class="fa-solid fa-paper-plane fa-fw"></i> {% translate "Enviar al SII" %}
+      </button>
+      <a href="{% url 'billing:emitido_detalle' documento.pk %}" class="btn btn-outline-secondary btn-volver">
+        {% translate "Cancelar" %}
+      </a>
+    </form>
+  {% else %}
+    <div class="alert alert-warning">
+      {% translate "El contribuyente no tiene un certificado digital enlazado — no se puede enviar." %}
+    </div>
+    <a href="{% url 'billing:emitido_detalle' documento.pk %}" class="btn btn-outline-secondary">
+      {% translate "Volver" %}
+    </a>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,69 @@
+{% load i18n %}
+<div class="card mb-3" id="certificados_lista-card">
+  <div class="card-header">{% translate "Certificados cargados" %}</div>
+  <div class="card-body p-0">
+    {% if certificados %}
+      <table class="table table-sm mb-0">
+        <tr>
+          <th class="ps-3">{% translate "Titular" %}</th>
+          <th>{% translate "Emisor" %}</th>
+          <th>{% translate "Vigente hasta" %}</th>
+          <th>{% translate "Estado" %}</th>
+          <th class="text-center" style="width: 80px;">{% translate "Acciones" %}</th>
+        </tr>
+        {% for certificado in certificados %}
+          <tr>
+            <td class="ps-3">
+              {% if certificado.nombre %}
+                {{ certificado.nombre }}<br>
+                <small class="text-muted"><code>{{ certificado.certificado_id }}</code></small>
+              {% else %}
+                <code>{{ certificado.certificado_id }}</code>
+              {% endif %}
+              {% if certificado.email %}
+                <br><small class="text-muted">{{ certificado.email }}</small>
+              {% endif %}
+            </td>
+            <td>{{ certificado.issuer|default:"—" }}</td>
+            <td>{{ certificado.valido_hasta|default:"—" }}</td>
+            <td>
+              {% if certificado.is_active is None %}
+                —
+              {% elif certificado.is_active %}
+                <span class="badge bg-success">{% translate "Activo" %}</span>
+              {% else %}
+                <span class="badge bg-danger">{% translate "Vencido" %}</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <a href="{% url 'libredte:certificado_eliminar' certificado.pk %}"
+                 class="btn btn-sm btn-outline-danger"
+                 title="{% translate 'Eliminar' %}" aria-label="{% translate 'Eliminar' %}">
+                <i class="fa-solid fa-trash fa-fw"></i>
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p class="text-muted p-3 mb-0">
+        {% translate "Todavía no has cargado ningún certificado." %}
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" id="certificados_subir-card">
+  <div class="card-header">{% translate "Cargar certificado" %}</div>
+  <div class="card-body">
+    <form method="post" action="{% url 'libredte:certificados' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% include "_field.html" with field=form.archivo %}
+      {% include "_field.html" with field=form.password %}
+      <button type="submit" class="btn btn-primary">
+        <i class="fa-solid fa-upload fa-fw"></i>
+        {% translate "Subir certificado" %}
+      </button>
+    </form>
+  </div>
+</div>

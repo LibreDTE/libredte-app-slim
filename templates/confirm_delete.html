@@ -1,0 +1,52 @@
+{% extends base_template|default:"layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Confirmar eliminación" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  {% if request.resolver_match.url_name == 'sucursal_eliminar' %}
+    <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+    <li class="breadcrumb-item">
+      <a href="{% url 'libredte_settings:sucursales' %}">{% translate "Sucursales" %}</a>
+    </li>
+  {% elif request.resolver_match.url_name == 'item_eliminar' %}
+    <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+    <li class="breadcrumb-item">
+      <a href="{% url 'billing_settings:items' %}">{% translate "Ítems" %}</a>
+    </li>
+  {% elif request.resolver_match.url_name == 'item_categoria_eliminar' %}
+    <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+    <li class="breadcrumb-item">
+      <a href="{% url 'billing_settings:items' %}#categorias">{% translate "Ítems" %}</a>
+    </li>
+  {% elif request.resolver_match.url_name == 'caf_eliminar' %}
+    <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+    <li class="breadcrumb-item"><a href="{% url 'billing_settings:folios' %}">{% translate "Folios" %}</a></li>
+    <li class="breadcrumb-item">
+      <a href="{% url 'billing_settings:folio_detalle' object.tipo_dte.pk %}">{{ object.tipo_dte.label }}</a>
+    </li>
+  {% elif request.resolver_match.url_name == 'certificado_eliminar' %}
+    <li class="breadcrumb-item">
+      <a href="{% url 'profile' %}#certificados">{% translate "Mi perfil" %}</a>
+    </li>
+  {% elif request.resolver_match.url_name == 'borrador_eliminar' %}
+    <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+    <li class="breadcrumb-item">
+      <a href="{% url 'billing:borradores' %}">{% translate "Borradores" %}</a>
+    </li>
+  {% else %}
+    <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+    <li class="breadcrumb-item">
+      <a href="{% url 'billing:receptores' %}">{% translate "Receptores" %}</a>
+    </li>
+  {% endif %}
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Eliminar" %}</li>
+{% endblock %}
+
+{% block content %}
+  {% include "_confirm_delete_body.html" %}
+{% endblock %}
+
+{% block settings_content %}
+  {% include "_confirm_delete_body.html" %}
+{% endblock %}

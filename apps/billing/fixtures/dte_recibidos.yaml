@@ -1,0 +1,70 @@
+# Escenarios de DTE recibidos para `seed_demo` — no es un fixture de
+# datos ya construidos (a diferencia de `document.examples`, de la
+# biblioteca): cada `documento` acá es la entrada de
+# `exchange.build_fake_sobre()` (Encabezado.IdDoc/Detalle; Emisor y
+# Receptor los completa `seed_demo` con los datos de `proveedor` y del
+# contribuyente de la demo). `seed_demo` arma, timbra y firma cada
+# documento con un CAF/certificado ficticio del proveedor (nada de eso
+# se persiste) y envuelve TODOS los documentos de un mismo `proveedor`
+# juntos en un único sobre `EnvioDTE` real (`create_many()`) antes de
+# pasarlo por `exchange.load_xml()` — el mismo camino que seguiría un
+# sobre recibido de verdad.
+#
+# Cada `proveedor` es un emisor distinto (`Emisor.rut`/`dv` acaba
+# siendo distinto para cada uno). Como cada uno ya tiene más de un
+# `documento`, esto ejercita el caso de un sobre con 2+ documentos sin
+# necesidad de un caso aparte.
+
+proveedores:
+  - rut: '77111222-6'
+    razon_social: Comercial Andes Ltda.
+    giro: Distribución de insumos de oficina
+    direccion: Av. Providencia 1208
+    comuna: Providencia
+    autorizacion_dte:
+      fecha_resolucion: '2018-03-01'
+      numero_resolucion: 0
+    documentos:
+      - tipo_dte: 33
+        folio: 1001
+        detalle:
+          - NmbItem: Resmas de papel carta
+            QtyItem: 20
+            PrcItem: 3500
+          - NmbItem: Tóner láser negro
+            QtyItem: 4
+            PrcItem: 45000
+      - tipo_dte: 33
+        folio: 1002
+        detalle:
+          - NmbItem: Archivadores palanca oficio
+            QtyItem: 15
+            PrcItem: 2200
+      - tipo_dte: 33
+        folio: 1003
+        detalle:
+          - NmbItem: Sillas de escritorio
+            QtyItem: 6
+            PrcItem: 65000
+
+  - rut: '79222333-8'
+    razon_social: Transportes del Valle SpA
+    giro: Transporte de carga por carretera
+    direccion: Camino a Melipilla 4500
+    comuna: Melipilla
+    autorizacion_dte:
+      fecha_resolucion: '2016-11-10'
+      numero_resolucion: 0
+    documentos:
+      - tipo_dte: 33
+        folio: 501
+        detalle:
+          - NmbItem: Flete Santa Cruz - Santiago
+            QtyItem: 1
+            PrcItem: 180000
+      - tipo_dte: 33
+        folio: 502
+        detalle:
+          - NmbItem: Flete Santa Cruz - Rancagua
+            QtyItem: 1
+            PrcItem: 95000

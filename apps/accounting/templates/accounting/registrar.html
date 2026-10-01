@@ -1,0 +1,21 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Registrar asiento" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Contabilidad" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Registrar asiento" %}</li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">{% translate "Registrar asiento" %}</h1>
+  <div class="card" id="registrar-card">
+    <div class="card-header">{% translate "Registrar asiento" %}</div>
+    <div class="card-body">
+      <p class="text-muted mb-0">
+        {% translate "Próximamente: formulario para registrar un asiento contable." %}
+      </p>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "layouts/public.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Bienvenido" %} — LibreDTE Slim{% endblock %}
+
+{% block content %}
+  <h1>{% translate "Bienvenido a LibreDTE Slim" %}</h1>
+  <p class="lead">
+    {% translate "Facturación electrónica (DTE) para Chile." %}
+  </p>
+  {% if not user.is_authenticated %}
+    <a href="{% url 'login' %}" class="btn btn-primary">
+      {% translate "Iniciar sesión" %}
+    </a>
+  {% endif %}
+{% endblock %}

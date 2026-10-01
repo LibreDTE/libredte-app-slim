@@ -1,0 +1,23 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Subir XML" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item"><a href="{% url 'billing:emitidos' %}">{% translate "Emitidos" %}</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Subir XML" %}</li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">{% translate "Subir XML" %}</h1>
+  <p class="text-muted">
+    {% translate "Sube el XML de un DTE ya timbrado y firmado, emitido por este contribuyente por otro medio (o recuperado de un respaldo)." %}
+  </p>
+  <div class="col-md-6">
+    <form method="post" enctype="multipart/form-data"
+          data-submit-lock="{% translate 'Cargando XML…' %}">
+      {% include "_form_fields.html" %}
+    </form>
+  </div>
+{% endblock %}

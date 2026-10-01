@@ -1,0 +1,69 @@
+{% extends "core/plugin_configure.html" %}
+{% load i18n %}
+
+{% block plugin_configure_content %}
+  {% if has_global_token %}
+    <div class="alert alert-info">
+      {% translate "Ya hay un token de API configurado a nivel de plataforma — Si personalizas la URL, deberás ingresar un token de API." %}
+    </div>
+  {% endif %}
+
+  <div class="row g-3">
+    {% include "core/_plugin_configure_form.html" %}
+
+    <div class="col-md-6">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h2 class="h6 card-title">{% translate "¿Buscas más funcionalidades?" %}</h2>
+          <p class="card-text text-muted mb-2">
+            {% translate "LibreDTE Pro agrega soporte oficial, alta disponibilidad y funcionalidades adicionales sobre la misma API que usa este plugin." %}
+          </p>
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="https://pro.libredte.cl" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
+              {% translate "¡Conoce LibreDTE Pro!" %}
+            </a>
+            <button type="button" id="btn-configurar-pro" class="btn btn-sm btn-primary">
+              {% translate "Configurar Pro" %}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <h2 class="h6 card-title">{% translate "¿Ya usas API Gateway?" %}</h2>
+          <p class="card-text text-muted mb-2">
+            {% translate "También puedes acceder a LibreDTE Lib a través de API Gateway, con el mismo token que ya usas en esa plataforma." %}
+          </p>
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="https://www.apigateway.cl" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
+              {% translate "Conoce API Gateway" %}
+            </a>
+            <button type="button" id="btn-configurar-apigateway" class="btn btn-sm btn-primary">
+              {% translate "Configurar API Gateway" %}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      function configurar(baseUrl, authScheme) {
+        document.getElementById('id_base_url').value = baseUrl;
+        document.getElementById('id_auth_scheme').value = authScheme;
+        document.getElementById('id_api_token').focus();
+      }
+      document.getElementById('btn-configurar-pro').addEventListener('click', function () {
+        configurar('https://pro.libredte.cl/api', 'Bearer');
+      });
+      document.getElementById('btn-configurar-apigateway').addEventListener('click', function () {
+        configurar('https://app.apigateway.cl/api/v2/libredte', 'Token');
+      });
+    });
+  </script>
+{% endblock %}

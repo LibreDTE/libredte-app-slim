@@ -1,0 +1,66 @@
+<script>
+  // Aplica el tema y el estado del menú ANTES de que llegue el CSS —
+  // sin esto, la página pinta primero en claro/menú expandido y
+  // recién después salta al valor guardado (flash visible). Se
+  // guarda en localStorage porque es puramente de presentación en
+  // este navegador, no algo que el servidor necesite saber.
+  (function () {
+    try {
+      var tema = localStorage.getItem('slim-theme');
+      if (tema === 'dark' || tema === 'light') {
+        document.documentElement.setAttribute('data-bs-theme', tema);
+      }
+      if (localStorage.getItem('slim-sidebar-collapsed') === '1') {
+        document.documentElement.setAttribute('data-sidebar', 'collapsed');
+      }
+    } catch (error) {
+      // localStorage puede no estar disponible (modo privado, etc.)
+      // — sin persistencia, pero la página igual funciona.
+    }
+  })();
+</script>
+{% include "_assets_css.html" %}
+<link
+  href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.5.2/dist/css/tabulator_bootstrap5.min.css"
+  rel="stylesheet"
+  integrity="sha384-jLY9tX1VvsF9WItIHuMydr6YXzOYzrAlp4DiS+SkLazNIL1q2PnfORgAAWgggkU7"
+  crossorigin="anonymous">
+<script
+  src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.5.2/dist/js/tabulator.min.js"
+  integrity="sha384-ZlfxHB5fIn8MOAuKJe8YBMi7snQXYvhy+0b3K4rGBBY2UvrJwho2jciJ5NKt0WtC"
+  crossorigin="anonymous"></script>
+<link
+  href="https://cdn.jsdelivr.net/npm/jsoneditor@10.4.3/dist/jsoneditor.min.css"
+  rel="stylesheet"
+  integrity="sha384-cj1rYBc4/dVYAknZMTkVCDRL6Knzugf32igVqsuFW0iRWFHKH8Ci8+ekC8gNsFZ+"
+  crossorigin="anonymous">
+<script
+  src="https://cdn.jsdelivr.net/npm/jsoneditor@10.4.3/dist/jsoneditor.min.js"
+  integrity="sha384-+FDgdyNR67BHMikhlspi9qjijZeQK+N7oUh5mKvO7r34VzgupHCa60LyRi6eGTw2"
+  crossorigin="anonymous"></script>
+<style>
+  /* Layout del shell (sidebar + contenido) con flexbox, no con las
+     columnas de Bootstrap — así el ancho del sidebar se puede animar
+     con un solo atributo (`data-sidebar`) en vez de tener que
+     intercambiar clases `col-*` por JS. */
+  .app-shell { display: flex; align-items: stretch; }
+  .app-sidebar {
+    width: 240px;
+    flex: 0 0 auto;
+    overflow-x: hidden;
+    transition: width .15s ease;
+  }
+  .app-main { flex: 1 1 auto; min-width: 0; }
+  html[data-sidebar="collapsed"] .app-sidebar { width: 64px; }
+  html[data-sidebar="collapsed"] .app-sidebar .sidebar-label,
+  html[data-sidebar="collapsed"] .app-sidebar .sidebar-contribuyente,
+  html[data-sidebar="collapsed"] .app-sidebar .sidebar-chevron {
+    display: none !important;
+  }
+  html[data-sidebar="collapsed"] .app-sidebar .nav-link {
+    text-align: center;
+  }
+  @media (max-width: 767.98px) {
+    .app-sidebar { display: none; }
+  }
+</style>

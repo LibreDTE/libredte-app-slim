@@ -1,0 +1,34 @@
+# Python.
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+.coverage
+.python-version
+var/
+tmp/
+
+*.md
+
+# Django.
+db.sqlite3*
+staticfiles/
+media/
+# Archivos que genera la app en ejecución (ZIP de PDF de la emisión
+# masiva).
+storage/
+
+# Configuración local (ver .env.example).
+.env
+
+# Archivos específicos del sistema operativo.
+.DS_Store
+
+# Configuración del editor.
+.vscode/

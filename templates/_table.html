@@ -1,0 +1,24 @@
+{% load i18n %}
+{{ rows|json_script:data_id }}
+{{ columns|json_script:columns_id }}
+<div id="{{ table_id }}"></div>
+<script>
+  // El script de tabulator.min.js se renderiza más abajo en la página
+  // (en base.html) — esperar DOMContentLoaded asegura que la librería
+  // ya esté cargada antes de usarla acá.
+  document.addEventListener('DOMContentLoaded', function () {
+    // Se registra en window.tabulators (por table_id) para que una tabla
+    // dentro de un tab de Bootstrap que empieza oculto pueda pedir un
+    // redraw() cuando su tab se muestra — Tabulator calcula anchos de
+    // columna con el contenedor visible, y una tabla creada mientras su
+    // tab está en display:none queda con el layout roto.
+    window.tabulators = window.tabulators || {};
+    window.tabulators['{{ table_id }}'] = new Tabulator('#{{ table_id }}', {
+      data: JSON.parse(document.getElementById('{{ data_id }}').textContent),
+      columns: JSON.parse(document.getElementById('{{ columns_id }}').textContent),
+      layout: 'fitColumns',
+      placeholder: '{% translate "Sin datos" %}',
+      {% if group_by %}groupBy: '{{ group_by }}',{% endif %}
+    });
+  });
+</script>

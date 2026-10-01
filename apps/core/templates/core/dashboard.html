@@ -1,0 +1,18 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}Dashboard — LibreDTE Slim{% endblock %}
+
+{% block content %}
+  <div class="mb-3">
+    <h1 class="h3 mb-1">Dashboard</h1>
+  </div>
+
+  {% for widget_html in dashboard_widgets %}
+    {{ widget_html }}
+  {% empty %}
+    <p class="text-muted">
+      {% translate "Todavía no hay nada que mostrar acá." %}
+    </p>
+  {% endfor %}
+{% endblock %}

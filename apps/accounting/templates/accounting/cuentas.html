@@ -1,0 +1,15 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Plan de cuentas" %} — LibreDTE Slim{% endblock %}
+
+{% block settings_content %}
+  <div class="card" id="cuentas-card">
+    <div class="card-header">{% translate "Plan de cuentas" %}</div>
+    <div class="card-body">
+      <p class="text-muted mb-0">
+        {% translate "Próximamente: configuración del plan de cuentas contables." %}
+      </p>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends base_template|default:"layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Integración SII" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Integración SII" %}</li>
+{% endblock %}
+
+{% block content %}
+  {% include "libredte/_sii_backend_upsell.html" %}
+{% endblock %}
+
+{% block settings_content %}
+  {% include "libredte/_sii_backend_upsell.html" %}
+{% endblock %}

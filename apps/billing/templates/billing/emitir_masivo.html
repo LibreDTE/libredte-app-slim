@@ -1,0 +1,138 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Emitir masivo" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Emitir masivo" %}</li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-start justify-content-between mb-1 gap-3 flex-wrap">
+    <h1 class="h3 mb-0">{% translate "Emitir masivo" %}</h1>
+    <div class="d-flex gap-2">
+      <a href="{% url 'billing:emitir_masivo_plantilla' 'csv' %}"
+         class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-file-csv fa-fw"></i>
+        {% translate "Ejemplo CSV" %}
+      </a>
+      <a href="{% url 'billing:emitir_masivo_plantilla' 'xlsx' %}"
+         class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-file-excel fa-fw"></i>
+        {% translate "Ejemplo XLSX" %}
+      </a>
+      <a href="{% url 'billing:emitir' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-file-invoice fa-fw"></i>
+        {% translate "Emitir individual" %}
+      </a>
+    </div>
+  </div>
+  <p class="text-muted mb-4">
+    {% translate "Emite varios documentos de una vez a partir de una planilla CSV o XLSX." %}
+    {% if correo_usuario %}
+      {% blocktranslate %}La planilla se procesa en segundo plano y el resultado se notifica por correo a <strong>{{ correo_usuario }}</strong> cuando termina.{% endblocktranslate %}
+    {% endif %}
+  </p>
+
+  {% if not correo_usuario %}
+    <div class="alert alert-warning d-flex gap-2 align-items-start">
+      <i class="fa-solid fa-triangle-exclamation fa-fw mt-1"></i>
+      <div>
+        {% blocktranslate %}El resultado de la emisión masiva llega por correo y su perfil no tiene uno. Agréguelo en su perfil antes de subir una planilla.{% endblocktranslate %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="card mb-3">
+    <div class="card-header">{% translate "Subir planilla" %}</div>
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data"
+            data-submit-lock="{% translate 'Enviando planilla…' %}"
+            data-submit-lock-unless="modo={{ form.MODO_VER }}">
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}
+          <div class="alert alert-danger">{{ error }}</div>
+        {% endfor %}
+        <div class="row g-3">
+          <div class="col-12 col-lg-4">{% include "_field.html" with field=form.archivo %}</div>
+          <div class="col-12 col-lg-4">{% include "_field.html" with field=form.modo %}</div>
+          <div class="col-12 col-lg-4">{% include "_field.html" with field=form.pdf %}</div>
+        </div>
+        <div class="text-center mt-3">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-file-circle-plus fa-fw"></i>
+            {% translate "Emitir DTE masivamente" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header">{% translate "Cómo se llena la planilla" %}</div>
+        <div class="card-body">
+          <ul class="mb-0 ps-3 small">
+            <li class="mb-2">
+              {% blocktranslate %}Cada fila con <strong>Tipo DTE</strong> abre un documento nuevo.{% endblocktranslate %}
+            </li>
+            <li class="mb-2">
+              {% blocktranslate %}Si el documento tiene más de un ítem o más de una referencia, se agrega una fila nueva donde solo van las columnas correspondientes al ítem o a la referencia, y las demás vacías.{% endblocktranslate %}
+            </li>
+            <li class="mb-2">
+              {% blocktranslate %}Use como guía las planillas de ejemplo de arriba: la primera fila es el encabezado y se ignora, y las columnas se leen por posición. El CSV usa <strong>;</strong> como separador.{% endblocktranslate %}
+            </li>
+            <li class="mb-2">
+              {% blocktranslate %}En un XLSX las celdas de fecha sirven con cualquier formato, mientras sean fechas de verdad y no texto. En un CSV, o si escribe una a mano como texto, use <strong>AAAA-MM-DD</strong>.{% endblocktranslate %}
+            </li>
+            <li class="mb-2">
+              {% blocktranslate %}La columna <strong>Folio</strong> es obligatoria, un número mayor a 0, y no puede repetirse dentro de un mismo tipo de documento. Solo identifica al documento dentro de la planilla: el folio real lo asigna el CAF al emitir.{% endblocktranslate %}
+            </li>
+            <li class="mb-2">
+              {% blocktranslate %}Si la planilla tiene un error, se informa el primero, con su fila, y no se emite nada hasta corregirlo.{% endblocktranslate %}
+            </li>
+            <li class="mb-2">
+              {% blocktranslate %}Con el modo <strong>Solo ver los documentos</strong> se descargan, en YAML, los documentos que leyó la biblioteca: no se emite ni se envía nada, y la opción de PDF no aplica.{% endblocktranslate %}
+            </li>
+            <li>
+              {% translate "Se recomienda no más de 100 documentos por planilla." %}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header">{% translate "Códigos de resultado" %}</div>
+        <div class="card-body d-flex flex-column">
+          <p class="small text-muted">
+            {% blocktranslate %}El resultado llega por correo: una planilla con una fila por documento, con su código de resultado y su glosa. El significado macro de cada código es:{% endblocktranslate %}
+          </p>
+          <table class="table table-sm small mb-3">
+            <thead>
+              <tr>
+                <th scope="col" class="text-nowrap">{% translate "Código" %}</th>
+                <th scope="col">{% translate "Descripción macro del resultado" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for codigo, glosa in glosas_codigo %}
+                <tr>
+                  <td><span class="badge bg-danger">{{ codigo }}</span></td>
+                  <td>{{ glosa }}</td>
+                </tr>
+              {% endfor %}
+              <tr>
+                <td><i class="fa-solid fa-circle-check fa-fw text-success"></i></td>
+                <td>{% translate "Documento generado (borrador o DTE real, según lo que se haya pedido)" %}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

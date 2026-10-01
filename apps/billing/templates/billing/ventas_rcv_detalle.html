@@ -1,0 +1,66 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "RCV de ventas" %} {{ periodo_glosa }} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:ventas' %}">{% translate "Ventas" %}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:ventas_periodo' periodo %}">{{ periodo_glosa }}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:ventas_periodo_rcv_resumen' periodo %}">{% translate "RCV" %}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">{{ tipo_dte_label }}</li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">
+    {% translate "RCV de ventas" %} — {{ periodo_glosa }}
+    — {{ tipo_dte_label }}
+  </h1>
+
+  <div class="alert alert-info" role="alert">
+    <i class="fa-solid fa-circle-info fa-fw"></i>
+    {% translate "Esta es una consulta en línea al Registro de Compras y Ventas del SII, con los campos más usados — no son los datos locales de" %}
+    <a href="{% url 'billing:ventas_periodo' periodo %}">{% translate "Ventas" %}</a>, {% translate "y pueden diferir de ellos." %}
+  </div>
+
+  <div class="card" id="rcv-ventas-detalle-card">
+    <div class="card-header">{% translate "Documentos" %}</div>
+    <div class="card-body">
+      {{ rows|json_script:"datos-rcv-ventas-detalle" }}
+      {{ columns|json_script:"columnas-rcv-ventas-detalle" }}
+      <div id="tabla-rcv-ventas-detalle"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var columnas = JSON.parse(
+        document.getElementById('columnas-rcv-ventas-detalle').textContent
+      );
+      columnas.forEach(function (columna) {
+        columna.headerFilter = 'input';
+      });
+      new Tabulator('#tabla-rcv-ventas-detalle', {
+        data: JSON.parse(
+          document.getElementById('datos-rcv-ventas-detalle').textContent
+        ),
+        columns: columnas,
+        layout: 'fitColumns',
+        placeholder: '{% translate "Sin datos" %}',
+        // Todos los documentos vienen en una sola respuesta del SII —
+        // se pagina y filtra en el navegador, no hay endpoint remoto.
+        pagination: true,
+        paginationSize: 20,
+      });
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% load i18n %}
+<table class="table table-sm mb-0">
+  <thead>
+    <tr class="text-muted">
+      <th class="text-nowrap" style="width: 130px;">{% translate "RUT" %}</th>
+      <th>{% translate "Nombre" %}</th>
+      <th class="text-center">{% translate "Admin." %}</th>
+      <th class="text-center">{% translate "Solicitar folios" %}</th>
+      <th class="text-center">{% translate "Anular folios" %}</th>
+      <th class="text-center">{% translate "Firmar" %}</th>
+      <th class="text-center">{% translate "Enviar" %}</th>
+      <th class="text-center">{% translate "Consultar" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for usuario in usuarios %}
+      <tr>
+        <td class="text-nowrap">{{ usuario.run }}</td>
+        <td>{{ usuario.nombre|default:"—" }}</td>
+        <td class="text-center">
+          {% if usuario.permisos.administrador %}
+            <i class="fa-solid fa-check text-success"></i>
+          {% endif %}
+        </td>
+        <td class="text-center">
+          {% if usuario.permisos.solicitar_folios %}
+            <i class="fa-solid fa-check text-success"></i>
+          {% endif %}
+        </td>
+        <td class="text-center">
+          {% if usuario.permisos.anular_folios %}
+            <i class="fa-solid fa-check text-success"></i>
+          {% endif %}
+        </td>
+        <td class="text-center">
+          {% if usuario.permisos.firmar %}
+            <i class="fa-solid fa-check text-success"></i>
+          {% endif %}
+        </td>
+        <td class="text-center">
+          {% if usuario.permisos.enviar %}
+            <i class="fa-solid fa-check text-success"></i>
+          {% endif %}
+        </td>
+        <td class="text-center">
+          {% if usuario.permisos.consultar %}
+            <i class="fa-solid fa-check text-success"></i>
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="8" class="text-muted">
+          {% translate "Sin usuarios autorizados." %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

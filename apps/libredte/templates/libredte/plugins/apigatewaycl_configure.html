@@ -1,0 +1,28 @@
+{% extends "core/plugin_configure.html" %}
+{% load i18n %}
+
+{% block plugin_configure_content %}
+  {% if has_global_token %}
+    <div class="alert alert-info">
+      {% translate "Ya hay un token de API configurado a nivel de plataforma — Si personalizas la URL, deberás ingresar un token de API." %}
+    </div>
+  {% endif %}
+
+  <div class="row g-3">
+    {% include "core/_plugin_configure_form.html" %}
+
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h2 class="h6 card-title">{% translate "¿Quieres desbloquear las funcionalidades extras de LibreDTE?" %}</h2>
+          <p class="card-text text-muted mb-2">
+            {% translate "API Gateway te da acceso a funcionalidades adicionales de LibreDTE, la búsqueda de datos de contribuyentes, timbraje automático, sincronización con el registro de compras y ventas, entre otras." %}
+          </p>
+          <a href="https://www.apigateway.cl" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
+            {% translate "¡Conoce API Gateway!" %}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

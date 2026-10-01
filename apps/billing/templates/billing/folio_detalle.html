@@ -1,0 +1,130 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Folios de" %} {{ tipo_dte.label }} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+  <li class="breadcrumb-item"><a href="{% url 'billing_settings:folios' %}">{% translate "Folios" %}</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{{ tipo_dte.label }}</li>
+{% endblock %}
+
+{% block settings_content %}
+  <div class="d-flex justify-content-between align-items-start mb-3 gap-3 flex-wrap">
+    <h1 class="h3 mb-0">{% translate "Folios de" %} {{ tipo_dte.label }}</h1>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'billing_settings:folio_solicitar_caf_tipo' tipo_dte.pk %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-stamp fa-fw"></i> {% translate "Solicitar CAF" %}
+      </a>
+      <a href="{% url 'billing_settings:folio_reobtener_caf' tipo_dte.pk %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-rotate fa-fw"></i> {% translate "Reobtener CAF" %}
+      </a>
+      <a href="{% url 'billing_settings:folio_anular_caf' tipo_dte.pk %}" class="btn btn-outline-danger btn-sm">
+        <i class="fa-solid fa-ban fa-fw"></i> {% translate "Anular folios" %}
+      </a>
+      <a href="{% url 'billing_settings:folio_modificar' tipo_dte.pk %}" class="btn btn-outline-primary btn-sm">
+        {% translate "Modificar" %}
+      </a>
+      <a href="{% url 'billing_settings:folios' %}" class="btn btn-outline-secondary btn-sm btn-volver">
+        {% translate "Volver" %}
+      </a>
+    </div>
+  </div>
+
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-4 text-center">
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <p class="small text-muted mb-1">{% translate "Siguiente folio" %}</p>
+          <p class="fs-4 mb-0">{{ caf_folio.siguiente }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <p class="small text-muted mb-1">{% translate "Folios disponibles" %}</p>
+          <p class="fs-4 mb-0">{{ caf_folio.disponibles }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <p class="small text-muted mb-1">{% translate "Alerta de folios" %}</p>
+          <p class="fs-4 mb-0">{{ caf_folio.alerta }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <p class="small text-muted mb-1">{% translate "Promedio mensual usado" %}</p>
+          <p class="fs-4 mb-0">{{ promedio_mensual }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link active" id="caf-tab" data-bs-toggle="tab"
+         href="#caf" role="tab" aria-controls="caf">
+        {% translate "CAF cargados" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="uso-tab" data-bs-toggle="tab"
+         href="#uso" role="tab" aria-controls="uso">
+        {% translate "Uso mensual" %}
+      </a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="caf" role="tabpanel"
+         aria-labelledby="caf-tab">
+      <div class="card" id="caf_lista-card">
+        <div class="card-header">{% translate "CAF cargados" %}</div>
+        <div class="card-body">
+          {% include "_table.html" with table_id="tabla-caf-detalle" data_id="datos-caf-detalle" columns_id="columnas-caf-detalle" rows=caf_rows columns=caf_columns %}
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="uso" role="tabpanel"
+         aria-labelledby="uso-tab">
+      <div class="card" id="uso_lista-card">
+        <div class="card-header">{% translate "Uso mensual" %}</div>
+        <div class="card-body">
+          {% include "_table.html" with table_id="tabla-uso-mensual" data_id="datos-uso-mensual" columns_id="columnas-uso-mensual" rows=usage_rows columns=usage_columns %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Al entrar directo con "#uso" en la URL, `Tabs.init()` (ver
+      // `_derafu_js.html`) ya deja la pestaña activa ANTES de que este
+      // script alcance a suscribirse a `shown.bs.tab` — el evento se
+      // pierde y la tabla queda con el layout roto (Tabulator calculó
+      // anchos de columna con el tab todavía oculto). Por eso también
+      // se revisa el estado actual al cargar, no solo el evento futuro.
+      const tabUso = document.getElementById('uso-tab');
+      function redibujarTablaUso() {
+        if (
+          tabUso.classList.contains('active')
+          && window.tabulators
+          && window.tabulators['tabla-uso-mensual']
+        ) {
+          window.tabulators['tabla-uso-mensual'].redraw(true);
+        }
+      }
+      tabUso.addEventListener('shown.bs.tab', redibujarTablaUso);
+      redibujarTablaUso();
+    });
+  </script>
+{% endblock %}

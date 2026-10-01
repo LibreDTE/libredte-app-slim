@@ -1,0 +1,70 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Sucursales" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Sucursales" %}</li>
+{% endblock %}
+
+{% block settings_content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{% translate "Sucursales" %}</h1>
+    <a href="{% url 'libredte_settings:sucursal_nueva' %}" class="btn btn-primary">
+      {% translate "+ Nueva sucursal" %}
+    </a>
+  </div>
+  <div id="tabla-sucursales"></div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      new Tabulator('#tabla-sucursales', {
+        layout: 'fitColumns',
+        placeholder: '{% translate "Sin datos" %}',
+
+        // Paginación/filtro/orden en el servidor — ver
+        // `libredte.api.views.SucursalListView`.
+        ajaxURL: '{% url "libredte_api:sucursales" %}',
+        pagination: true,
+        paginationMode: 'remote',
+        paginationSize: 20,
+        filterMode: 'remote',
+        sortMode: 'remote',
+
+        columns: [
+          {
+            title: '{% translate "Nombre" %}', field: 'nombre',
+            widthGrow: 1, minWidth: 140, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Código SII" %}', field: 'codigo_sii',
+            width: 140, headerFilter: 'input',
+          },
+          {
+            // Sin filtro: es un booleano en el modelo, un filtro de
+            // texto libre no le calza bien.
+            title: '{% translate "Matriz" %}', field: 'es_matriz',
+            width: 110,
+          },
+          {
+            title: '{% translate "Dirección" %}', field: 'direccion',
+            widthGrow: 2, minWidth: 180, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Comuna" %}', field: 'comuna',
+            widthGrow: 1, minWidth: 140, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Acciones" %}', field: 'acciones',
+            width: 100, hozAlign: 'center', headerSort: false,
+            formatter: 'html',
+          },
+        ],
+      });
+    });
+  </script>
+{% endblock %}

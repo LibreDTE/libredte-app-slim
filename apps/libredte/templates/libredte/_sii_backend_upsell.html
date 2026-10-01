@@ -1,0 +1,41 @@
+{% load i18n %}
+<div class="text-center py-3">
+  <i class="fa-solid fa-bolt fa-2x text-warning mb-3"></i>
+  <h5 class="mb-2">
+    {% translate "Desbloquea las funcionalidades SII de LibreDTE Slim" %}
+  </h5>
+  <p class="text-muted mb-3">
+    {% translate "Sin entrar al portal del SII a mano, podrías:" %}
+  </p>
+  <ul class="list-unstyled text-start d-inline-block mb-4">
+    <li class="mb-2">
+      <i class="fa-solid fa-check text-success fa-fw"></i>
+      {% translate "Ver los usuarios autorizados ante el SII y sus permisos" %}
+    </li>
+    <li class="mb-2">
+      <i class="fa-solid fa-check text-success fa-fw"></i>
+      {% translate "Confirmar los datos y el software declarado de tu empresa" %}
+    </li>
+    <li class="mb-2">
+      <i class="fa-solid fa-check text-success fa-fw"></i>
+      {% translate "Pedir y anular folios (CAF) sin salir de Slim" %}
+    </li>
+    <li class="mb-2">
+      <i class="fa-solid fa-check text-success fa-fw"></i>
+      {% translate "Revisar tu Registro de Compras y Ventas" %}
+    </li>
+  </ul>
+  <div class="d-flex justify-content-center gap-2 flex-wrap">
+    {% for plugin in plugins %}
+      <a href="{% url 'core_settings:plugin_configure' plugin.id %}"
+         class="btn btn-primary">
+        <i class="fa-solid fa-plug fa-fw"></i>
+        {% blocktranslate with label=plugin.label %}Activar {{ label }}{% endblocktranslate %}
+      </a>
+    {% empty %}
+      <p class="text-muted small mb-0">
+        {% translate "Todavía no hay ningún plugin disponible que provea esta funcionalidad." %}
+      </p>
+    {% endfor %}
+  </div>
+</div>

@@ -1,0 +1,85 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Receptores" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Receptores" %}</li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{% translate "Receptores" %}</h1>
+    <a href="{% url 'billing:receptor_nuevo' %}" class="btn btn-primary">
+      {% translate "+ Nuevo receptor" %}
+    </a>
+  </div>
+  <div id="tabla-receptores"></div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // `0` es un pk que nunca existe de verdad — sirve de placeholder
+      // para armar la URL de detalle en JS sin hardcodear la ruta acá
+      // (mismo criterio que `emitidos.html`/`borradores.html`).
+      var detalleUrlBase = '{% url "billing:receptor_detalle" 0 %}'.slice(0, -2);
+
+      new Tabulator('#tabla-receptores', {
+        layout: 'fitColumns',
+        placeholder: '{% translate "Sin datos" %}',
+
+        // Paginación/filtro/orden en el servidor — ver
+        // `billing.api.views.ReceptorListView`.
+        ajaxURL: '{% url "billing_api:receptores" %}',
+        pagination: true,
+        paginationMode: 'remote',
+        paginationSize: 20,
+        filterMode: 'remote',
+        sortMode: 'remote',
+
+        columns: [
+          {
+            title: 'RUT', field: 'rut', width: 120,
+            headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Código interno" %}', field: 'codigo_interno',
+            width: 140, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Razón social" %}', field: 'razon_social',
+            widthGrow: 2, minWidth: 180, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Giro" %}', field: 'giro',
+            widthGrow: 2, minWidth: 160, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Comuna/ciudad" %}', field: 'ubicacion',
+            widthGrow: 1, minWidth: 140, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Correo" %}', field: 'correo',
+            widthGrow: 1, minWidth: 160, headerFilter: 'input',
+          },
+          {
+            // Un solo botón ("Ver") — editar/eliminar viven en el
+            // detalle del receptor (eliminar en su tab "Avanzado"),
+            // no en esta lista.
+            title: '{% translate "Acciones" %}', field: 'id', width: 100,
+            hozAlign: 'center', headerSort: false,
+            formatter: function (cell) {
+              var href = detalleUrlBase + cell.getValue() + '/';
+              return '<a href="' + href + '" class="btn btn-sm btn-outline-primary" '
+                + 'title="{% translate "Ver" %}" aria-label="{% translate "Ver" %}">'
+                + '<i class="fa-solid fa-eye fa-fw"></i></a>';
+            },
+          },
+        ],
+      });
+    });
+  </script>
+{% endblock %}

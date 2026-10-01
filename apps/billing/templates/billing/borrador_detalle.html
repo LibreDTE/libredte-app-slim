@@ -1,0 +1,387 @@
+{% extends "layouts/app.html" %}
+{% load i18n humanize %}
+
+{% block title %}{% translate "Borrador" %} {{ borrador.tipo_dte.label }} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:borradores' %}">{% translate "Borradores" %}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">
+    {{ borrador.tipo_dte.label }}
+  </li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-start justify-content-between mb-3 gap-3 flex-wrap">
+    <div>
+      <h1 class="h3 mb-1">
+        {{ borrador.tipo_dte.label }}
+        <span class="badge bg-secondary">{{ borrador.codigo }}</span>
+        <span class="badge bg-warning text-dark">{% translate "Borrador" %}</span>
+      </h1>
+      <span class="text-muted small">
+        {% translate "Fecha" %} {{ borrador.fecha }}
+      </span>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-primary btn-sm"
+              data-bs-toggle="modal" data-bs-target="#modal-confirmar">
+        <i class="fa-solid fa-check fa-fw"></i> {% translate "Confirmar y emitir" %}
+      </button>
+      <a href="{% url 'billing:borrador_eliminar' borrador.pk %}"
+         class="btn btn-outline-danger btn-sm">
+        <i class="fa-solid fa-trash fa-fw"></i> {% translate "Descartar" %}
+      </a>
+      <a href="{% url 'billing:borrador_descargar_pdf' borrador.pk %}"
+         class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-file-pdf fa-fw"></i> {% translate "Descargar PDF" %}
+      </a>
+      <a href="{% url 'billing:receptor_detalle' borrador.receptor.pk %}"
+         class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-user fa-fw"></i> {% translate "Ir al receptor" %}
+      </a>
+      <a href="{% url 'billing:borradores' %}" class="btn btn-outline-secondary btn-sm btn-volver">
+        <i class="fa-solid fa-arrow-left fa-fw"></i> {% translate "Volver" %}
+      </a>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link active" id="general-tab" data-bs-toggle="tab"
+         href="#general" role="tab" aria-controls="general">
+        {% translate "General" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="preview-tab" data-bs-toggle="tab"
+         href="#preview" role="tab" aria-controls="preview">
+        {% translate "Vista previa" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="xml-tab" data-bs-toggle="tab"
+         href="#xml" role="tab" aria-controls="xml">
+        XML
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="normalizado-tab" data-bs-toggle="tab"
+         href="#normalizado" role="tab" aria-controls="normalizado">
+        {% translate "JSON Normalizado" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="extra-tab" data-bs-toggle="tab"
+         href="#extra" role="tab" aria-controls="extra">
+        {% translate "JSON Extra" %}
+      </a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="general" role="tabpanel"
+         aria-labelledby="general-tab">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <div class="card h-100" id="receptor-card">
+            <div class="card-header">{% translate "Receptor" %}</div>
+            <div class="card-body">
+              <h6 class="fw-semibold mb-1">{{ borrador.receptor.razon_social|default:"—" }}</h6>
+              <p class="text-muted small mb-0">
+                RUT {{ borrador.receptor.rut }}-{{ borrador.receptor.dv }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card h-100" id="totales-card">
+            <div class="card-header">{% translate "Totales" %}</div>
+            <div class="card-body p-0">
+              <table class="table table-sm mb-0">
+                {% if borrador.neto %}
+                  <tr>
+                    <td class="ps-3 text-muted">{% translate "Neto" %}</td>
+                    <td class="pe-3 text-end">${{ borrador.neto|intcomma:False }}</td>
+                  </tr>
+                {% endif %}
+                {% if borrador.exento %}
+                  <tr>
+                    <td class="ps-3 text-muted">{% translate "Exento" %}</td>
+                    <td class="pe-3 text-end">${{ borrador.exento|intcomma:False }}</td>
+                  </tr>
+                {% endif %}
+                {% if borrador.iva %}
+                  <tr>
+                    <td class="ps-3 text-muted">IVA</td>
+                    <td class="pe-3 text-end">${{ borrador.iva|intcomma:False }}</td>
+                  </tr>
+                {% endif %}
+                <tr class="table-light">
+                  <td class="ps-3 fw-semibold">{% translate "Total" %}</td>
+                  <td class="pe-3 text-end fw-semibold fs-6">${{ borrador.total|intcomma:False }}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card h-100" id="documento-card">
+            <div class="card-header">{% translate "Documento" %}</div>
+            <div class="card-body p-0">
+              <table class="table table-sm mb-0">
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Tipo" %}</td>
+                  <td class="pe-3 text-end">{{ borrador.tipo_dte.label }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Fecha" %}</td>
+                  <td class="pe-3 text-end">{{ borrador.fecha }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Código" %}</td>
+                  <td class="pe-3 text-end">
+                    {{ borrador.codigo }}
+                    <br>
+                    <small class="text-muted">
+                      {% translate "El folio real se asigna al confirmar" %}
+                    </small>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Creado el" %}</td>
+                  <td class="pe-3 text-end">{{ borrador.fecha_hora_creacion }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Creado por" %}</td>
+                  <td class="pe-3 text-end">{{ borrador.usuario }}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-0">
+        <div class="col-12">
+          <div class="card" id="detalle-card">
+            <div class="card-header">{% translate "Detalle" %}</div>
+            <div class="card-body">
+              <table class="table table-sm mb-0">
+                <thead>
+                  <tr class="text-muted">
+                    <th>{% translate "Ítem" %}</th>
+                    <th class="text-end">{% translate "Cantidad" %}</th>
+                    <th class="text-end">{% translate "Precio" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in borrador.datos.Detalle %}
+                    <tr>
+                      <td>{{ item.NmbItem }}</td>
+                      <td class="text-end">{{ item.QtyItem|default:"—" }}</td>
+                      <td class="text-end">
+                        {% if item.PrcItem %}${{ item.PrcItem|intcomma:False }}{% else %}—{% endif %}
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="3" class="text-muted">{% translate "Sin ítems" %}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="preview" role="tabpanel"
+         aria-labelledby="preview-tab">
+      <div class="card" id="preview_documento-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>{% translate "Vista previa" %}</span>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-print-preview">
+              <i class="fa-solid fa-print fa-fw"></i> {% translate "Imprimir" %}
+            </button>
+            <a href="{% url 'billing:borrador_descargar_pdf' borrador.pk %}"
+               class="btn btn-outline-secondary btn-sm">
+              <i class="fa-solid fa-file-pdf fa-fw"></i> {% translate "Descargar PDF" %}
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <iframe id="preview-iframe"
+                  data-src="{% url 'billing:borrador_render_html' borrador.pk %}"
+                  style="width: 100%; height: 700px; border: none;"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="xml" role="tabpanel"
+         aria-labelledby="xml-tab">
+      <div class="card" id="xml_contenido-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>XML</span>
+          <a href="{% url 'billing:borrador_descargar_xml' borrador.pk %}"
+             class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-download fa-fw"></i> {% translate "Descargar XML" %}
+          </a>
+        </div>
+        <div class="card-body">
+          <pre class="small mb-0" style="max-height: 500px; overflow: auto;">{{ borrador.xml }}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="normalizado" role="tabpanel"
+         aria-labelledby="normalizado-tab">
+      <div class="card" id="normalizado_documento-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>{% translate "JSON Normalizado" %}</span>
+          <a href="{% url 'billing:borrador_descargar_json_normalizado' borrador.pk %}"
+             class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-download fa-fw"></i> {% translate "Descargar JSON" %}
+          </a>
+        </div>
+        <div class="card-body">
+          <textarea class="slim-json-editor" id="datos-normalizados"
+                    rows="20">{{ datos_json }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="extra" role="tabpanel"
+         aria-labelledby="extra-tab">
+      <div class="card" id="extra_documento-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>{% translate "JSON Extra" %}</span>
+          <a href="{% url 'billing:borrador_descargar_json_extra' borrador.pk %}"
+             class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-download fa-fw"></i> {% translate "Descargar JSON" %}
+          </a>
+        </div>
+        <div class="card-body">
+          <textarea class="slim-json-editor" id="datos-extra"
+                    rows="20">{{ extra_json }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% comment %}
+    Confirmar consume un folio real del CAF y no se puede deshacer, así
+    que se pregunta con el resumen del documento a la vista (el usuario
+    puede estar llegando desde la tabla de borradores sin haber mirado
+    el detalle). El resumen se arma acá, en el servidor, con los mismos
+    datos de la página — no hay una llamada aparte para poblarlo.
+  {% endcomment %}
+  <div class="modal fade" id="modal-confirmar" tabindex="-1"
+       aria-labelledby="modal-confirmar-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modal-confirmar-titulo">
+            <i class="fa-solid fa-circle-question fa-fw text-warning"></i>
+            {% translate "Confirmar y emitir" %}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"
+                  aria-label="{% translate 'Cerrar' %}"></button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-sm">
+            <tr>
+              <td class="text-muted">{% translate "Documento" %}</td>
+              <td class="text-end">{{ borrador.tipo_dte.label }}</td>
+            </tr>
+            <tr>
+              <td class="text-muted">{% translate "Receptor" %}</td>
+              <td class="text-end">
+                {{ borrador.receptor.razon_social|default:"—" }}
+                <br>
+                <small class="text-muted">
+                  {{ borrador.receptor.rut }}-{{ borrador.receptor.dv }}
+                </small>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-muted">{% translate "Fecha" %}</td>
+              <td class="text-end">{{ borrador.fecha }}</td>
+            </tr>
+            <tr>
+              <td class="text-muted">{% translate "Ítems" %}</td>
+              <td class="text-end">{{ borrador.datos.Detalle|length }}</td>
+            </tr>
+            <tr class="table-light">
+              <td class="fw-semibold">{% translate "Total" %}</td>
+              <td class="text-end fw-semibold fs-6">
+                ${{ borrador.total|intcomma:False }}
+              </td>
+            </tr>
+          </table>
+          <div class="alert alert-warning mb-0" role="alert">
+            {% translate "Se asignará un folio, se timbrará y se firmará — consume un folio de tu CAF y no se puede deshacer." %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal">
+            {% translate "Cancelar" %}
+          </button>
+          <form method="post"
+                action="{% url 'billing:borrador_confirmar' borrador.pk %}"
+                data-submit-lock="{% translate 'Emitiendo…' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-check fa-fw"></i>
+              {% translate "Confirmar y emitir" %}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // El iframe se carga recién al abrir la pestaña — mismo criterio
+      // que `emitido_detalle.html` (evita pagar la llamada a la API si
+      // nadie mira la vista previa, y cubre el caso de entrar directo
+      // con "#preview" en la URL, ver `_derafu_js.html`).
+      var tabPreview = document.getElementById('preview-tab');
+      var iframe = document.getElementById('preview-iframe');
+      if (tabPreview && iframe) {
+        function cargarPreviewSiCorresponde() {
+          if (!iframe.getAttribute('src') && tabPreview.classList.contains('active')) {
+            iframe.src = iframe.dataset.src;
+          }
+        }
+        tabPreview.addEventListener('shown.bs.tab', cargarPreviewSiCorresponde);
+        cargarPreviewSiCorresponde();
+      }
+
+      // Editores JSON de solo lectura — sirven para inspeccionar los
+      // datos guardados, no hay acción de "guardar" en esta página.
+      initializeJsonEditor('.slim-json-editor');
+
+      var btnPrint = document.getElementById('btn-print-preview');
+      if (btnPrint && iframe) {
+        btnPrint.addEventListener('click', function () {
+          if (iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+          }
+        });
+      }
+    });
+  </script>
+{% endblock %}

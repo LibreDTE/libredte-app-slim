@@ -1,0 +1,19 @@
+{% load i18n %}
+<div class="col-md-6">
+  <form method="post">
+    {% csrf_token %}
+    {% for error in form.non_field_errors %}
+      <div class="text-danger small mb-3">{{ error }}</div>
+    {% endfor %}
+    {% for error in activation_form.non_field_errors %}
+      <div class="text-danger small mb-3">{{ error }}</div>
+    {% endfor %}
+    {% for field in form %}
+      {% include "_field.html" with field=field %}
+    {% endfor %}
+    {% for field in activation_form %}
+      {% include "_field.html" with field=field %}
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">{% translate "Guardar" %}</button>
+  </form>
+</div>

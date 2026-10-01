@@ -1,0 +1,21 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Empleados" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Recursos Humanos" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Empleados" %}</li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">{% translate "Empleados" %}</h1>
+  <div class="card" id="empleados-card">
+    <div class="card-header">{% translate "Empleados" %}</div>
+    <div class="card-body">
+      <p class="text-muted mb-0">
+        {% translate "Próximamente: lista de empleados de la empresa, con su ficha y datos." %}
+      </p>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% load i18n %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <button type="button" class="btn btn-link nav-link d-none d-md-inline-block"
+          id="btn-toggle-sidebar" title="{% translate 'Colapsar menú' %}"
+          aria-label="{% translate 'Colapsar menú' %}">
+    <i class="fa-solid fa-bars fa-fw"></i>
+  </button>
+  <a class="navbar-brand" href="{% url 'public:welcome' %}">LibreDTE Slim</a>
+  <div class="navbar-nav ms-auto pe-3 flex-row gap-3">
+    <button type="button" class="btn btn-link nav-link" id="btn-toggle-theme"
+            title="{% translate 'Modo oscuro' %}" aria-label="{% translate 'Modo oscuro' %}">
+      <i class="fa-solid fa-moon fa-fw" id="icon-theme"></i>
+    </button>
+  </div>
+</nav>

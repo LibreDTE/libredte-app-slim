@@ -1,0 +1,43 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Solicitar CAF" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+  <li class="breadcrumb-item"><a href="{% url 'billing_settings:folios' %}">{% translate "Folios" %}</a></li>
+  {% if tipo_dte %}
+    <li class="breadcrumb-item">
+      <a href="{% url 'billing_settings:folio_detalle' tipo_dte.pk %}">{{ tipo_dte.label }}</a>
+    </li>
+  {% endif %}
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Solicitar CAF" %}</li>
+{% endblock %}
+
+{% block settings_content %}
+  <h1 class="h3 mb-3">{% translate "Solicitar CAF" %}</h1>
+  <p class="text-muted">
+    {% translate "Pide folios nuevos directamente al SII y los carga automáticamente en Slim." %}
+    {% translate "Ambiente actual" %}: <strong>{{ current_contribuyente.ambiente }}</strong>.
+  </p>
+
+  <div class="alert alert-info" role="alert">
+    <i class="fa-solid fa-circle-info fa-fw"></i>
+    {% translate "Si es la primera vez que timbras este tipo de documento, el SII puede exigir hacerlo manualmente desde su sitio antes de que esta solicitud funcione — los timbrajes siguientes sí se piden desde aquí." %}
+  </div>
+
+  <div class="col-md-6">
+    <form method="post" data-submit-lock="{% translate 'Solicitando al SII…' %}">
+      {% csrf_token %}
+      {% for error in form.non_field_errors %}
+        <div class="alert alert-danger">{{ error }}</div>
+      {% endfor %}
+      {% for field in form %}
+        {% include "_field.html" with field=field %}
+      {% endfor %}
+      <button type="submit" class="btn btn-primary">
+        <i class="fa-solid fa-stamp fa-fw"></i> {% translate "Solicitar" %}
+      </button>
+    </form>
+  </div>
+{% endblock %}

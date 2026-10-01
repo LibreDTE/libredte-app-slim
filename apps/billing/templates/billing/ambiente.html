@@ -1,0 +1,116 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Ambiente" %} — LibreDTE Slim{% endblock %}
+
+{% block settings_content %}
+  <div class="card" id="ambiente-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>{% translate "Ambiente" %}</span>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm"
+                data-bs-toggle="modal" data-bs-target="#modal-sii-datos-empresa">
+          <i class="fa-solid fa-building fa-fw"></i>
+          {% translate "Consultar datos de la empresa en el SII" %}
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm"
+                data-bs-toggle="modal" data-bs-target="#modal-sii-usuarios">
+          <i class="fa-solid fa-users fa-fw"></i>
+          {% translate "Consultar usuarios autorizados en el SII" %}
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <p>
+        {% translate "Ambiente actual" %}:
+        <strong>{{ current_contribuyente.ambiente }}</strong>
+      </p>
+      <form method="post">
+        {% csrf_token %}
+        {% include "_field.html" with field=form.autorizacion_dte_resolucion_fecha %}
+        {% include "_field.html" with field=form.autorizacion_dte_resolucion_numero %}
+        <button type="submit" class="btn btn-primary">
+          {% translate "Guardar" %}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modal-sii-datos-empresa" tabindex="-1"
+       aria-labelledby="modal-sii-datos-empresa-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modal-sii-datos-empresa-titulo">
+            {% translate "Datos de la empresa ante el SII" %}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"
+                  aria-label="{% translate 'Cerrar' %}"></button>
+        </div>
+        <div class="modal-body" data-sii-modal-body
+             data-sii-url="{% url 'billing_settings:ambiente_sii_datos_empresa' %}">
+          <div class="text-center text-muted py-4">
+            <i class="fa-solid fa-spinner fa-spin fa-fw"></i>
+            {% translate "Consultando…" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modal-sii-usuarios" tabindex="-1"
+       aria-labelledby="modal-sii-usuarios-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modal-sii-usuarios-titulo">
+            {% translate "Usuarios autorizados ante el SII" %}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"
+                  aria-label="{% translate 'Cerrar' %}"></button>
+        </div>
+        <div class="modal-body" data-sii-modal-body
+             data-sii-url="{% url 'billing_settings:ambiente_sii_usuarios' %}">
+          <div class="text-center text-muted py-4">
+            <i class="fa-solid fa-spinner fa-spin fa-fw"></i>
+            {% translate "Consultando…" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Se consulta recién al abrir el modal, cada vez (sin cachear el
+      // resultado) — es una llamada real al SII, y el punto de este
+      // botón es ver el estado vigente, no uno guardado de la última
+      // vez que se abrió.
+      document.querySelectorAll('[data-sii-modal-body]').forEach(function (body) {
+        const modal = body.closest('.modal');
+        modal.addEventListener('show.bs.modal', function () {
+          body.innerHTML = (
+            '<div class="text-center text-muted py-4">' +
+            '<i class="fa-solid fa-spinner fa-spin fa-fw"></i> ' +
+            '{% translate "Consultando…" %}</div>'
+          );
+          fetch(body.dataset.siiUrl, {
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+          })
+            .then(function (response) { return response.text(); })
+            .then(function (html) { body.innerHTML = html; })
+            .catch(function () {
+              body.innerHTML = (
+                '<div class="alert alert-danger mb-0">' +
+                '{% translate "No se pudo consultar el SII." %}' +
+                '</div>'
+              );
+            });
+        });
+      });
+    });
+  </script>
+{% endblock %}

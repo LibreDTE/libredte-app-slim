@@ -1,0 +1,22 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Modificar folios de" %} {{ tipo_dte.label }} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+  <li class="breadcrumb-item"><a href="{% url 'billing_settings:folios' %}">{% translate "Folios" %}</a></li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing_settings:folio_detalle' tipo_dte.pk %}">{{ tipo_dte.label }}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Modificar" %}</li>
+{% endblock %}
+
+{% block settings_content %}
+  <h1 class="h3 mb-3">{% translate "Modificar folios de" %} {{ tipo_dte.label }}</h1>
+  <div class="col-md-6">
+    <form method="post">
+      {% include "_form_fields.html" %}
+    </form>
+  </div>
+{% endblock %}

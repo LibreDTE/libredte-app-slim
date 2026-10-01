@@ -1,0 +1,72 @@
+{% load i18n menu_extras %}<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}LibreDTE Slim{% endblock %}</title>
+  {% include "_authenticated_head.html" %}
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  {% include "_authenticated_topbar.html" %}
+
+  <div class="app-shell">
+    <nav class="app-sidebar d-none d-md-block bg-body-tertiary border-end py-3">
+      <div class="px-3 pb-2 mb-2 border-bottom sidebar-contribuyente">
+        {{ current_contribuyente.razon_social }}
+        <br>
+        <small class="text-muted">
+          {{ current_contribuyente.rut }}-{{ current_contribuyente.dv }}
+        </small>
+      </div>
+      <a href="{% url 'core:dashboard' %}"
+         class="d-flex align-items-center gap-2 px-3 py-2 mb-2 text-decoration-none">
+        <i class="fa-solid fa-arrow-left fa-fw"></i>
+        <span class="sidebar-label">{% translate "Volver a la app" %}</span>
+      </a>
+      {% for section in settings_sections %}
+        <div class="small text-uppercase text-muted fw-semibold mt-2 mb-1 px-3 sidebar-label">
+          {{ section.label }}
+        </div>
+        <ul class="nav nav-pills flex-column">
+          {% for item in section.items %}
+            <li class="nav-item">
+              <a class="nav-link {% if item.url_name == section|active_menu_url_name:request.path %}active{% endif %}"
+                 href="{% url item.url_name %}" title="{{ item.label }}">
+                <i class="fa-solid fa-{{ item.icon }} fa-fw"></i>
+                <span class="sidebar-label">{{ item.label }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endfor %}
+    </nav>
+    <main class="app-main py-3 px-3">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}" title="{% translate 'Dashboard' %}">
+              <i class="fa-solid fa-house fa-fw"></i>
+            </a>
+          </li>
+          {% block breadcrumbs %}
+            <li class="breadcrumb-item active" aria-current="page">{% translate "Configuración" %}</li>
+          {% endblock %}
+        </ol>
+      </nav>
+      {% include "_messages.html" %}
+      <h1 class="h3 mb-3">{% translate "Configuración" %}</h1>
+      {% block settings_content %}{% endblock %}
+    </main>
+  </div>
+
+  <footer class="border-top py-3 mt-3 px-3 text-muted small">
+    &copy; {% now "Y" %} LibreDTE Slim.
+  </footer>
+
+  {% include "_assets_js.html" %}
+  {% include "_authenticated_scripts.html" %}
+  {% include "_derafu_js.html" %}
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

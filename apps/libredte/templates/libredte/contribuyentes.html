@@ -1,0 +1,18 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Contribuyentes" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Contribuyentes" %}</li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{% translate "Contribuyentes" %}</h1>
+    <a href="{% url 'libredte:wizard_contribuyente' %}" class="btn btn-primary btn-sm">
+      {% translate "Registrar contribuyente" %}
+    </a>
+  </div>
+  {% include "_table.html" with table_id="contribuyente-table" data_id="contribuyente-data" columns_id="contribuyente-columns" rows=rows columns=columns %}
+{% endblock %}

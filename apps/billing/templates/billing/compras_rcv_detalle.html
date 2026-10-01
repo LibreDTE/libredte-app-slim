@@ -1,0 +1,81 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "RCV de compras" %} {{ periodo_glosa }} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:compras' %}">{% translate "Compras" %}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:compras_periodo' periodo %}">{{ periodo_glosa }}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:compras_periodo_rcv_resumen' periodo estado %}">{% translate "RCV" %}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">{{ tipo_dte_label }}</li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-start mb-3 gap-3 flex-wrap">
+    <h1 class="h3 mb-0">
+      {% translate "RCV de compras" %} — {{ periodo_glosa }}
+      — {{ tipo_dte_label }}
+    </h1>
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fa-solid fa-building-columns fa-fw"></i> {% translate "Estado" %}: {{ estado_glosa }}
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        {% for valor, glosa in estado_choices %}
+          <li>
+            <a class="dropdown-item{% if valor == estado %} active{% endif %}"
+               href="{% url 'billing:compras_periodo_rcv_resumen' periodo valor %}">{{ glosa }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert alert-info" role="alert">
+    <i class="fa-solid fa-circle-info fa-fw"></i>
+    {% translate "Esta es una consulta en línea al Registro de Compras y Ventas del SII, con los campos más usados — no son los datos locales de" %}
+    <a href="{% url 'billing:compras_periodo' periodo %}">{% translate "Compras" %}</a>, {% translate "y pueden diferir de ellos." %}
+  </div>
+
+  <div class="card" id="rcv-compras-detalle-card">
+    <div class="card-header">{% translate "Documentos" %}</div>
+    <div class="card-body">
+      {{ rows|json_script:"datos-rcv-compras-detalle" }}
+      {{ columns|json_script:"columnas-rcv-compras-detalle" }}
+      <div id="tabla-rcv-compras-detalle"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var columnas = JSON.parse(
+        document.getElementById('columnas-rcv-compras-detalle').textContent
+      );
+      columnas.forEach(function (columna) {
+        columna.headerFilter = 'input';
+      });
+      new Tabulator('#tabla-rcv-compras-detalle', {
+        data: JSON.parse(
+          document.getElementById('datos-rcv-compras-detalle').textContent
+        ),
+        columns: columnas,
+        layout: 'fitColumns',
+        placeholder: '{% translate "Sin datos" %}',
+        // Todos los documentos vienen en una sola respuesta del SII —
+        // se pagina y filtra en el navegador, no hay endpoint remoto.
+        pagination: true,
+        paginationSize: 20,
+      });
+    });
+  </script>
+{% endblock %}

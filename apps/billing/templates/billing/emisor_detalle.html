@@ -1,0 +1,211 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{{ emisor.razon_social|default:emisor.rut }} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:emisores' %}">{% translate "Emisores" %}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">
+    {{ emisor.razon_social|default:emisor.rut }}
+  </li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-start justify-content-between mb-3 gap-3 flex-wrap">
+    <div>
+      <h1 class="h3 mb-1">{{ emisor.razon_social|default:"—" }}</h1>
+      <span class="text-muted">RUT {{ emisor.rut }}-{{ emisor.dv }}</span>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'billing:emisores' %}" class="btn btn-outline-secondary btn-sm btn-volver">
+        <i class="fa-solid fa-arrow-left fa-fw"></i> {% translate "Volver" %}
+      </a>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link active" id="datos-tab" data-bs-toggle="tab"
+         href="#datos" role="tab" aria-controls="datos">
+        {% translate "Datos" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="recibidos-tab" data-bs-toggle="tab"
+         href="#recibidos" role="tab" aria-controls="recibidos">
+        {% translate "Recibidos" %}
+      </a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="datos" role="tabpanel"
+         aria-labelledby="datos-tab">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card h-100" id="datos_generales-card">
+            <div class="card-header">{% translate "Datos generales" %}</div>
+            <div class="card-body p-0">
+              <table class="table table-sm mb-0">
+                <tr>
+                  <td class="ps-3 text-muted">RUT</td>
+                  <td class="pe-3 text-end">{{ emisor.rut }}-{{ emisor.dv }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Código interno" %}</td>
+                  <td class="pe-3 text-end">{{ emisor.codigo_interno|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Razón social" %}</td>
+                  <td class="pe-3 text-end">{{ emisor.razon_social|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Giro" %}</td>
+                  <td class="pe-3 text-end">{{ emisor.giro|default:"—" }}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card h-100" id="datos_contacto-card">
+            <div class="card-header">{% translate "Contacto y ubicación" %}</div>
+            <div class="card-body p-0">
+              <table class="table table-sm mb-0">
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Teléfono" %}</td>
+                  <td class="pe-3 text-end">{{ emisor.telefono|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Correo" %}</td>
+                  <td class="pe-3 text-end">{{ emisor.correo|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Dirección" %}</td>
+                  <td class="pe-3 text-end">{{ emisor.direccion|default:"—" }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">
+                    {% if emisor.es_extranjero %}{% translate "País" %}{% else %}{% translate "Comuna" %}{% endif %}
+                  </td>
+                  <td class="pe-3 text-end">
+                    {% if emisor.es_extranjero %}
+                      {{ emisor.ciudad|default:"—" }}, {{ emisor.pais.glosa }}
+                    {% else %}
+                      {{ emisor.comuna.glosa|default:"—" }}
+                    {% endif %}
+                  </td>
+                </tr>
+                {% if emisor.es_extranjero %}
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "N.° identificación" %}</td>
+                  <td class="pe-3 text-end">{{ emisor.numero_identificacion|default:"—" }}</td>
+                </tr>
+                {% endif %}
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="recibidos" role="tabpanel"
+         aria-labelledby="recibidos-tab">
+      <div id="tabla-emisor-recibidos"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // `0` es un pk que nunca existe de verdad — sirve de placeholder
+      // para armar la URL de detalle en JS sin hardcodear la ruta acá
+      // (mismo criterio que en `receptor_detalle.html`).
+      var detalleUrlBase = '{% url "billing:recibido_detalle" 0 %}'.slice(0, -2);
+
+      // `emisor_id` acota `billing_api:recibidos` a este emisor — ver
+      // `DteRecibidoListView.get_queryset()`. Mismas columnas/filtros/
+      // acción "Ver" que `recibidos.html`, salvo la columna "Emisor"
+      // (redundante acá: la tabla entera ya es de este emisor). La
+      // tabla se crea ya (aunque su tab empiece oculto) y se le pide
+      // `redraw()` recién al mostrarla (mismo criterio que
+      // `receptor_detalle.html`): Tabulator calcula anchos de columna
+      // con el contenedor visible.
+      window.tabulators = window.tabulators || {};
+      window.tabulators['tabla-emisor-recibidos'] = new Tabulator(
+        '#tabla-emisor-recibidos',
+        {
+          layout: 'fitColumns',
+          placeholder: '{% translate "Sin documentos recibidos de este emisor" %}',
+          ajaxURL: '{% url "billing_api:recibidos" %}',
+          ajaxParams: {emisor_id: '{{ emisor.pk }}'},
+          pagination: true,
+          paginationMode: 'remote',
+          paginationSize: 20,
+          filterMode: 'remote',
+          sortMode: 'remote',
+          columns: [
+            {
+              title: '{% translate "Documento" %}', field: 'tipo', width: 220,
+              headerFilter: 'input',
+            },
+            {
+              title: '{% translate "Folio" %}', field: 'folio', width: 90,
+              headerFilter: 'input', headerFilterFunc: '=',
+            },
+            {
+              title: '{% translate "Fecha" %}', field: 'fecha', width: 130,
+              headerFilter: 'input',
+              formatter: function (cell) {
+                var value = cell.getValue();
+                if (!value) return '';
+                var partes = value.split('-');
+                return partes[2] + '/' + partes[1] + '/' + partes[0];
+              },
+            },
+            {
+              title: '{% translate "Total" %}', field: 'total', hozAlign: 'right',
+              formatter: 'money', formatterParams: {symbol: '$', precision: 0},
+              width: 120, headerFilter: 'input',
+            },
+            {
+              title: '{% translate "Estado RCV" %}', field: 'estado',
+              widthGrow: 1, minWidth: 180,
+            },
+            {
+              title: '{% translate "Acciones" %}', field: 'id', width: 100,
+              hozAlign: 'center', headerSort: false,
+              formatter: function (cell) {
+                var href = detalleUrlBase + cell.getValue() + '/';
+                return '<a href="' + href + '" class="btn btn-sm btn-outline-primary" '
+                  + 'title="{% translate "Ver" %}" aria-label="{% translate "Ver" %}">'
+                  + '<i class="fa-solid fa-eye fa-fw"></i></a>';
+              },
+            },
+          ],
+        },
+      );
+
+      // Al entrar directo con "#recibidos" en la URL, `Tabs.init()`
+      // (ver `_derafu_js.html`) ya deja la pestaña activa ANTES de que
+      // este script alcance a suscribirse a `shown.bs.tab` — el
+      // evento se pierde y la tabla queda con el layout roto. Por eso
+      // también se revisa el estado actual al cargar, no solo el
+      // evento futuro.
+      const tabRecibidos = document.getElementById('recibidos-tab');
+      function redibujarTablaRecibidos() {
+        if (tabRecibidos.classList.contains('active')) {
+          window.tabulators['tabla-emisor-recibidos'].redraw(true);
+        }
+      }
+      tabRecibidos.addEventListener('shown.bs.tab', redibujarTablaRecibidos);
+      redibujarTablaRecibidos();
+    });
+  </script>
+{% endblock %}

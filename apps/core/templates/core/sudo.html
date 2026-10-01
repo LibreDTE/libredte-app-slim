@@ -1,0 +1,27 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Confirmar contraseña" %} — LibreDTE Slim{% endblock %}
+
+{% block content %}
+  <div class="col-md-5">
+    <h1 class="h4 mb-3">
+      <i class="fa-solid fa-shield-halved fa-fw"></i>
+      {% translate "Confirma tu contraseña" %}
+    </h1>
+    <p class="text-muted">
+      {% translate "Por seguridad, esta acción requiere confirmar tu contraseña de nuevo." %}
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      {% include "_field.html" with field=form.password %}
+      <button type="submit" class="btn btn-primary">
+        {% translate "Confirmar" %}
+      </button>
+      <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
+        {% translate "Cancelar" %}
+      </a>
+    </form>
+  </div>
+{% endblock %}

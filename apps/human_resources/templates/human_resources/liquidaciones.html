@@ -1,0 +1,21 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Liquidaciones" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Recursos Humanos" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Liquidaciones" %}</li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">{% translate "Liquidaciones" %}</h1>
+  <div class="card" id="liquidaciones-card">
+    <div class="card-header">{% translate "Liquidaciones" %}</div>
+    <div class="card-body">
+      <p class="text-muted mb-0">
+        {% translate "Próximamente: liquidaciones de sueldo por período." %}
+      </p>
+    </div>
+  </div>
+{% endblock %}

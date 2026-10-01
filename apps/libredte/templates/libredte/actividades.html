@@ -1,0 +1,88 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Actividades económicas" %} — LibreDTE Slim{% endblock %}
+
+{% block settings_content %}
+  <div class="card mb-3" id="actividades-lista-card">
+    <div class="card-header">{% translate "Actividades económicas" %}</div>
+    <div class="card-body p-0">
+      {% if actividades %}
+        <table class="table table-sm mb-0">
+          <tr>
+            <th class="ps-3">{% translate "Código" %}</th>
+            <th>{% translate "Glosa" %}</th>
+            <th>{% translate "Afecta IVA" %}</th>
+            <th class="text-center">{% translate "Principal" %}</th>
+            <th class="text-center" style="width: 80px;">{% translate "Acciones" %}</th>
+          </tr>
+          {% for asociacion in actividades %}
+            <tr>
+              <td class="ps-3">{{ asociacion.actividad_economica.codigo }}</td>
+              <td>{{ asociacion.actividad_economica.glosa }}</td>
+              <td>
+                {% if asociacion.actividad_economica.afecta_iva is None %}
+                  —
+                {% elif asociacion.actividad_economica.afecta_iva %}
+                  {% translate "Sí" %}
+                {% else %}
+                  {% translate "No" %}
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% if asociacion.es_principal %}
+                  <span class="badge bg-primary">{% translate "Principal" %}</span>
+                {% else %}
+                  <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="principal">
+                    <input type="hidden" name="actividad_economica" value="{{ asociacion.actividad_economica_id }}">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                      {% translate "Marcar" %}
+                    </button>
+                  </form>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% if asociacion.es_principal %}
+                  <button type="button" class="btn btn-sm btn-outline-danger" disabled
+                          title="{% translate 'No puedes quitar la actividad principal' %}">
+                    <i class="fa-solid fa-trash fa-fw"></i>
+                  </button>
+                {% else %}
+                  <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="eliminar">
+                    <input type="hidden" name="actividad_economica" value="{{ asociacion.actividad_economica_id }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            title="{% translate 'Eliminar' %}" aria-label="{% translate 'Eliminar' %}">
+                      <i class="fa-solid fa-trash fa-fw"></i>
+                    </button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+      {% else %}
+        <p class="text-muted p-3 mb-0">
+          {% translate "Todavía no hay actividades económicas asociadas." %}
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card" id="actividades-agregar-card">
+    <div class="card-header">{% translate "Agregar actividad económica" %}</div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="agregar">
+        {% include "_field.html" with field=form.actividad_economica %}
+        <button type="submit" class="btn btn-primary">
+          {% translate "Agregar" %}
+        </button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

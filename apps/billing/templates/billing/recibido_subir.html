@@ -1,0 +1,23 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Subir XML" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item"><a href="{% url 'billing:recibidos' %}">{% translate "Recibidos" %}</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Subir XML" %}</li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">{% translate "Subir XML" %}</h1>
+  <p class="text-muted">
+    {% translate "Sube el sobre EnvioDTE (XML) recibido de un proveedor — si trae más de un documento, se cargan todos." %}
+  </p>
+  <div class="col-md-6">
+    <form method="post" enctype="multipart/form-data"
+          data-submit-lock="{% translate 'Cargando sobre…' %}">
+      {% include "_form_fields.html" %}
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Folios" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Folios" %}</li>
+{% endblock %}
+
+{% block settings_content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{% translate "Folios" %}</h1>
+    <div class="d-flex gap-2">
+      <a href="{% url 'billing_settings:folio_subir_caf' %}" class="btn btn-primary">
+        <i class="fa-solid fa-upload fa-fw"></i> {% translate "Cargar CAF" %}
+      </a>
+      <a href="{% url 'billing_settings:folio_solicitar_caf' %}" class="btn btn-primary">
+        <i class="fa-solid fa-stamp fa-fw"></i> {% translate "Solicitar CAF" %}
+      </a>
+    </div>
+  </div>
+  <p class="text-muted">
+    {% translate "Códigos de Autorización de Folios (CAF) asignados por el SII, por tipo de documento." %}
+  </p>
+  {% include "_table.html" with table_id="tabla-folios" data_id="datos-folios" columns_id="columnas-folios" rows=rows columns=columns %}
+
+  <div class="mt-4">
+    {% include "billing/_folios_consejos.html" %}
+  </div>
+{% endblock %}

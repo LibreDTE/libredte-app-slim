@@ -1,0 +1,17 @@
+{% load i18n %}
+<h1 class="h3 mb-3">{% translate "Confirmar eliminación" %}</h1>
+<p>
+  {% blocktranslate %}¿Seguro que quieres eliminar "{{ object }}"?{% endblocktranslate %}
+</p>
+{% if contribuyentes_afectados %}
+  <div class="alert alert-warning">
+    {% blocktranslate count n=contribuyentes_afectados %}{{ n }} contribuyente quedará sin certificado.{% plural %}{{ n }} contribuyentes quedarán sin certificado.{% endblocktranslate %}
+  </div>
+{% endif %}
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger">{% translate "Eliminar" %}</button>
+  <a href="#" onclick="history.back(); return false;" class="btn btn-outline-secondary">
+    {% translate "Cancelar" %}
+  </a>
+</form>

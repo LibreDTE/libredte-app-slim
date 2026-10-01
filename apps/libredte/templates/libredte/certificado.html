@@ -1,0 +1,94 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Certificado digital" %} — LibreDTE Slim{% endblock %}
+
+{% block settings_content %}
+  {% if current_contribuyente.certificado %}
+    <div class="card mb-3" id="certificado-card">
+      <div class="card-header">{% translate "Certificado enlazado" %}</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          {% if current_contribuyente.certificado.nombre %}
+            <tr>
+              <td class="ps-3 text-muted" style="width: 220px;">{% translate "Titular" %}</td>
+              <td>{{ current_contribuyente.certificado.nombre }}</td>
+            </tr>
+          {% endif %}
+          <tr>
+            <td class="ps-3 text-muted" style="width: 220px;">{% translate "RUT del certificado" %}</td>
+            <td><code>{{ current_contribuyente.certificado.certificado_id }}</code></td>
+          </tr>
+          {% if current_contribuyente.certificado.email %}
+            <tr>
+              <td class="ps-3 text-muted" style="width: 220px;">{% translate "Correo" %}</td>
+              <td>{{ current_contribuyente.certificado.email }}</td>
+            </tr>
+          {% endif %}
+          {% if current_contribuyente.certificado.issuer %}
+            <tr>
+              <td class="ps-3 text-muted" style="width: 220px;">{% translate "Emisor" %}</td>
+              <td>{{ current_contribuyente.certificado.issuer }}</td>
+            </tr>
+          {% endif %}
+          {% if current_contribuyente.certificado.valido_hasta %}
+            <tr>
+              <td class="ps-3 text-muted" style="width: 220px;">{% translate "Vigente" %}</td>
+              <td>
+                {{ current_contribuyente.certificado.valido_desde }}
+                &ndash;
+                {{ current_contribuyente.certificado.valido_hasta }}
+                ({% blocktranslate count n=current_contribuyente.certificado.dias_totales %}{{ n }} día{% plural %}{{ n }} días{% endblocktranslate %})
+              </td>
+            </tr>
+            <tr>
+              <td class="ps-3 text-muted" style="width: 220px;">{% translate "Estado" %}</td>
+              <td>
+                {% if current_contribuyente.certificado.is_active %}
+                  <span class="badge bg-success">{% translate "Activo" %}</span>
+                {% else %}
+                  <span class="badge bg-danger">{% translate "Vencido" %}</span>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td class="ps-3 text-muted" style="width: 220px;">{% translate "Vigencia restante" %}</td>
+              <td>
+                {% with dias=current_contribuyente.certificado.dias_vencimiento %}
+                  {% if dias <= 0 %}
+                    <span class="text-danger">{% translate "Vencido" %}</span>
+                  {% else %}
+                    {% blocktranslate count n=dias %}{{ n }} día{% plural %}{{ n }} días{% endblocktranslate %}
+                  {% endif %}
+                {% endwith %}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td class="ps-3 text-muted" colspan="2">
+                {% translate "Sin fecha de vigencia registrada." %}
+              </td>
+            </tr>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="card" id="certificado-enlazar-card">
+    <div class="card-header">{% translate "Certificado a usar" %}</div>
+    <div class="card-body">
+      {% url 'profile' as perfil_url %}
+      <p class="text-muted small">
+        {% blocktranslate %}Elige uno de los certificados que subiste en <a href="{{ perfil_url }}#certificados">Mi perfil</a>.{% endblocktranslate %}
+      </p>
+      <form method="post">
+        {% csrf_token %}
+        {% include "_field.html" with field=form.certificado %}
+        <button type="submit" class="btn btn-primary">
+          {% translate "Guardar" %}
+        </button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

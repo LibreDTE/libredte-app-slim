@@ -1,0 +1,22 @@
+{% load i18n %}
+<tr>
+  <td>{% include "_widget_errors.html" with field=subform.TpoCodigo %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.VlrCodigo %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.NmbItem %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.DscItem %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.IndExe %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.QtyItem %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.UnmdItem %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.PrcItem %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.CodImpAdic %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.ValorDR %}</td>
+  <td>{% include "_widget_errors.html" with field=subform.TpoValor %}</td>
+  <td class="text-end text-nowrap item-subtotal">—</td>
+  <td>
+    <span class="d-none">{{ subform.DELETE }}</span>
+    <button type="button" class="btn btn-sm btn-outline-danger btn-quitar-fila"
+            title="{% translate 'Quitar' %}" aria-label="{% translate 'Quitar' %}">
+      <i class="fa-solid fa-trash fa-fw"></i>
+    </button>
+  </td>
+</tr>

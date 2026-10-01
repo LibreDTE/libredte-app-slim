@@ -1,0 +1,42 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Mi empresa" %} — LibreDTE Slim{% endblock %}
+
+{% block settings_content %}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="card mb-3" id="empresa_datos_basicos-card">
+      <div class="card-header">{% translate "Datos básicos" %}</div>
+      <div class="card-body">
+        {% include "_field.html" with field=form.rut %}
+        {% include "_field.html" with field=form.razon_social %}
+        {% include "_field.html" with field=form.giro %}
+        {% include "_field.html" with field=form.direccion %}
+        {% include "_field.html" with field=form.comuna %}
+      </div>
+    </div>
+
+    <div class="card mb-3" id="empresa_marca-card">
+      <div class="card-header">{% translate "Marca" %}</div>
+      <div class="card-body">
+        {% include "_field.html" with field=form.nombre_fantasia %}
+        {% include "_field.html" with field=form.logo %}
+      </div>
+    </div>
+
+    <div class="card mb-3" id="empresa_contacto-card">
+      <div class="card-header">{% translate "Contacto" %}</div>
+      <div class="card-body">
+        {% include "_field.html" with field=form.telefono %}
+        {% include "_field.html" with field=form.correo %}
+        {% include "_field.html" with field=form.sitio_web %}
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      {% translate "Guardar" %}
+    </button>
+  </form>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Sucursal" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'libredte_settings:sucursales' %}">{% translate "Sucursales" %}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">
+    {% if object %}{% translate "Editar sucursal" %}{% else %}{% translate "Nueva sucursal" %}{% endif %}
+  </li>
+{% endblock %}
+
+{% block settings_content %}
+  <h1 class="h3 mb-3">
+    {% if object %}{% translate "Editar sucursal" %}{% else %}{% translate "Nueva sucursal" %}{% endif %}
+  </h1>
+  <div class="col-md-6">
+    <form method="post">
+      {% include "_form_fields.html" %}
+    </form>
+  </div>
+{% endblock %}

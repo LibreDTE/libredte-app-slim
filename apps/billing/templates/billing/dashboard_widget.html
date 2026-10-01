@@ -1,0 +1,825 @@
+{% load i18n humanize %}
+{% comment %}
+Encabezados de sección, tarjetas KPI con tile de icono, cabeceras de
+tarjeta con subtítulo y tablas compactas: todo con utilidades de
+Bootstrap 5.3 (`*-subtle`/`*-emphasis`, `text-body-secondary`,
+`stretched-link`, `vstack`), sin hoja de estilos propia.
+{% endcomment %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <h2 class="h6 text-uppercase text-body-secondary fw-semibold mb-0">
+  </h2>
+  <div class="btn-group btn-group-sm" role="group" aria-label="{% translate 'Selector de período' %}">
+    <a href="?periodo={{ stats.periodo_anterior }}" class="btn btn-outline-secondary"
+       title="{% translate 'Período anterior' %}">
+      <i class="fa-solid fa-chevron-left"></i>
+    </a>
+    <span class="btn btn-outline-secondary disabled text-body fw-semibold">{{ stats.periodo_glosa }}</span>
+    {% if stats.periodo_siguiente %}
+      <a href="?periodo={{ stats.periodo_siguiente }}" class="btn btn-outline-secondary"
+         title="{% translate 'Período siguiente' %}">
+        <i class="fa-solid fa-chevron-right"></i>
+      </a>
+    {% else %}
+      <span class="btn btn-outline-secondary disabled">
+        <i class="fa-solid fa-chevron-right"></i>
+      </span>
+    {% endif %}
+  </div>
+</div>
+
+{% comment %}
+Avisos accionables: cada uno lleva a la pantalla donde se resuelve, con
+el chevron como señal de que es navegable.
+{% endcomment %}
+<div class="vstack gap-2 mb-4">
+  {% if stats.rechazados_pendientes %}
+    <a href="{% url 'billing:emitidos' %}"
+       class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-0 text-decoration-none">
+      <i class="fa-solid fa-circle-exclamation fa-fw"></i>
+      <span>{% blocktranslate count n=stats.rechazados_pendientes %}{{ n }} documento rechazado por el SII — revísalo y reemítelo.{% plural %}{{ n }} documentos rechazados por el SII — revísalos y reemítelos.{% endblocktranslate %}</span>
+      <i class="fa-solid fa-chevron-right fa-fw ms-auto small"></i>
+    </a>
+  {% endif %}
+  {% if stats.dias_vencimiento_certificado is not None and stats.dias_vencimiento_certificado <= 20 %}
+    <a href="{% url 'profile' %}#certificados"
+       class="alert {% if stats.dias_vencimiento_certificado <= 0 %}alert-danger{% else %}alert-warning{% endif %} d-flex align-items-center gap-2 py-2 mb-0 text-decoration-none">
+      <i class="fa-solid fa-certificate fa-fw"></i>
+      <span>
+        {% if stats.dias_vencimiento_certificado <= 0 %}
+          {% translate "El certificado digital ya venció — no se pueden timbrar/firmar documentos nuevos." %}
+        {% else %}
+          {% blocktranslate count n=stats.dias_vencimiento_certificado %}El certificado digital vence en {{ n }} día.{% plural %}El certificado digital vence en {{ n }} días.{% endblocktranslate %}
+        {% endif %}
+      </span>
+      <i class="fa-solid fa-chevron-right fa-fw ms-auto small"></i>
+    </a>
+  {% endif %}
+  {% if stats.emitidos_sin_enviar %}
+    <a href="{% url 'billing:emitidos' %}"
+       class="alert alert-warning d-flex align-items-center gap-2 py-2 mb-0 text-decoration-none">
+      <i class="fa-solid fa-paper-plane fa-fw"></i>
+      <span>{% blocktranslate count n=stats.emitidos_sin_enviar %}{{ n }} documento emitido sin enviar al SII.{% plural %}{{ n }} documentos emitidos sin enviar al SII.{% endblocktranslate %}</span>
+      <i class="fa-solid fa-chevron-right fa-fw ms-auto small"></i>
+    </a>
+  {% endif %}
+  {% if stats.recibidos_por_vencer_rcv %}
+    <a href="{% url 'billing:recibidos' %}"
+       class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-0 text-decoration-none">
+      <i class="fa-solid fa-hourglass-end fa-fw"></i>
+      <span>{% blocktranslate count n=stats.recibidos_por_vencer_rcv %}{{ n }} documento recibido está por aceptarse automáticamente en el RCV sin revisión — revísalo antes de que se cumpla el plazo.{% plural %}{{ n }} documentos recibidos están por aceptarse automáticamente en el RCV sin revisión — revísalos antes de que se cumpla el plazo.{% endblocktranslate %}</span>
+      <i class="fa-solid fa-chevron-right fa-fw ms-auto small"></i>
+    </a>
+  {% elif stats.recibidos_pendientes_rcv %}
+    <a href="{% url 'billing:recibidos' %}"
+       class="alert alert-warning d-flex align-items-center gap-2 py-2 mb-0 text-decoration-none">
+      <i class="fa-solid fa-clipboard-check fa-fw"></i>
+      <span>{% blocktranslate count n=stats.recibidos_pendientes_rcv %}{{ n }} documento recibido pendiente de revisar en el RCV.{% plural %}{{ n }} documentos recibidos pendientes de revisar en el RCV.{% endblocktranslate %}</span>
+      <i class="fa-solid fa-chevron-right fa-fw ms-auto small"></i>
+    </a>
+  {% endif %}
+  {% if stats.recibidos_rechazados_rcv %}
+    <a href="{% url 'billing:recibidos' %}"
+       class="alert alert-warning d-flex align-items-center gap-2 py-2 mb-0 text-decoration-none">
+      <i class="fa-solid fa-ban fa-fw"></i>
+      <span>{% blocktranslate count n=stats.recibidos_rechazados_rcv %}{{ n }} documento recibido rechazado en el RCV — pídele al proveedor un documento corregido.{% plural %}{{ n }} documentos recibidos rechazados en el RCV — pídele al proveedor documentos corregidos.{% endblocktranslate %}</span>
+      <i class="fa-solid fa-chevron-right fa-fw ms-auto small"></i>
+    </a>
+  {% endif %}
+</div>
+
+<div class="row row-cols-2 row-cols-xl-4 g-3 mb-3">
+  <div class="col">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span class="bg-primary-subtle text-primary-emphasis rounded-3 p-3 lh-1">
+          <i class="fa-solid fa-file-invoice fa-fw fs-4"></i>
+        </span>
+        <div>
+          <div class="fs-3 fw-semibold lh-1">{{ stats.documentos }}</div>
+          <div class="small text-body-secondary">
+            <a href="{% url 'billing:emitidos' %}" class="stretched-link text-reset text-decoration-none">
+              {% translate "Documentos emitidos" %}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span class="bg-success-subtle text-success-emphasis rounded-3 p-3 lh-1">
+          <i class="fa-solid fa-sack-dollar fa-fw fs-4"></i>
+        </span>
+        <div>
+          <div class="fs-3 fw-semibold lh-1">${{ stats.total_neto|intcomma:False }}</div>
+          <div class="small text-body-secondary">
+            <a href="{% url 'billing:ventas_periodo' stats.periodo %}" class="stretched-link text-reset text-decoration-none">
+              {% translate "Total facturado neto" %}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span class="bg-info-subtle text-info-emphasis rounded-3 p-3 lh-1">
+          <i class="fa-solid fa-percent fa-fw fs-4"></i>
+        </span>
+        <div>
+          <div class="fs-3 fw-semibold lh-1">${{ stats.iva_neto|intcomma:False }}</div>
+          <div class="small text-body-secondary">{% translate "IVA débito fiscal" %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span class="{% if stats.con_reparos %}bg-warning-subtle text-warning-emphasis{% else %}bg-secondary-subtle text-secondary-emphasis{% endif %} rounded-3 p-3 lh-1">
+          <i class="fa-solid fa-triangle-exclamation fa-fw fs-4"></i>
+        </span>
+        <div>
+          <div class="fs-3 fw-semibold lh-1 {% if stats.con_reparos %}text-warning{% endif %}">
+            {{ stats.con_reparos }}
+          </div>
+          <div class="small text-body-secondary">
+            <a href="{% url 'billing:emitidos' %}" class="stretched-link text-reset text-decoration-none">
+              {% translate "Documentos con reparos" %}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row row-cols-2 row-cols-xl-4 g-3 mb-4">
+  <div class="col">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span class="{% if stats.ventas_variacion_pct is None %}bg-secondary-subtle text-secondary-emphasis{% elif stats.ventas_variacion_pct < 0 %}bg-danger-subtle text-danger-emphasis{% else %}bg-success-subtle text-success-emphasis{% endif %} rounded-3 p-3 lh-1">
+          <i class="fa-solid {% if stats.ventas_variacion_pct is None %}fa-minus{% elif stats.ventas_variacion_pct < 0 %}fa-arrow-trend-down{% else %}fa-arrow-trend-up{% endif %} fa-fw fs-4"></i>
+        </span>
+        <div>
+          {% if stats.ventas_variacion_pct is not None %}
+            <div class="fs-3 fw-semibold lh-1 {% if stats.ventas_variacion_pct < 0 %}text-danger{% else %}text-success{% endif %}">
+              {{ stats.ventas_variacion_pct|floatformat:1 }}%
+            </div>
+          {% else %}
+            <div class="fs-3 fw-semibold lh-1 text-body-secondary">—</div>
+          {% endif %}
+          <div class="small text-body-secondary">{% translate "Ventas vs. mes anterior" %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span class="bg-warning-subtle text-warning-emphasis rounded-3 p-3 lh-1">
+          <i class="fa-solid fa-cart-shopping fa-fw fs-4"></i>
+        </span>
+        <div>
+          <div class="fs-3 fw-semibold lh-1">${{ stats.compras_total|intcomma:False }}</div>
+          <div class="small text-body-secondary">
+            <a href="{% url 'billing:compras_periodo' stats.periodo %}" class="stretched-link text-reset text-decoration-none">
+              {% translate "Compras del período" %}
+            </a>
+            ·
+            {% blocktranslate count n=stats.compras_documentos %}{{ n }} documento{% plural %}{{ n }} documentos{% endblocktranslate %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span class="{% if stats.margen_operativo < 0 %}bg-danger-subtle text-danger-emphasis{% else %}bg-success-subtle text-success-emphasis{% endif %} rounded-3 p-3 lh-1">
+          <i class="fa-solid fa-scale-balanced fa-fw fs-4"></i>
+        </span>
+        <div>
+          <div class="fs-3 fw-semibold lh-1 {% if stats.margen_operativo < 0 %}text-danger{% else %}text-success{% endif %}">
+            ${{ stats.margen_operativo|intcomma:False }}
+          </div>
+          <div class="small text-body-secondary">
+            {% translate "Margen operativo" %} · {% translate "Ventas − Compras" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span class="bg-primary-subtle text-primary-emphasis rounded-3 p-3 lh-1">
+          <i class="fa-solid fa-users fa-fw fs-4"></i>
+        </span>
+        <div>
+          {% if stats.concentracion_top1_pct is not None %}
+            <div class="fs-3 fw-semibold lh-1">{{ stats.concentracion_top1_pct|floatformat:1 }}%</div>
+            <div class="small text-body-secondary">
+              {% translate "Concentración top cliente" %} ·
+              {% blocktranslate with pct=stats.concentracion_top3_pct|floatformat:1 %}top 3: {{ pct }}%{% endblocktranslate %}
+            </div>
+          {% else %}
+            <div class="fs-3 fw-semibold lh-1 text-body-secondary">—</div>
+            <div class="small text-body-secondary">{% translate "Concentración top cliente" %}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="h6 text-uppercase text-body-secondary fw-semibold mb-2">
+  <i class="fa-solid fa-chart-line fa-fw"></i> {% translate "Tendencias" %}
+</h2>
+<div class="row g-3 mb-4">
+  <div class="col-xl-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">
+        <h3 class="h6 mb-0">{% translate "Documentos y monto emitidos por mes" %}</h3>
+        <small class="text-body-secondary">
+          {% translate "Cuántos documentos se emiten cada mes y por qué monto total" %}
+        </small>
+      </div>
+      <div class="card-body pt-0">
+        <div id="chart-documentos-por-mes"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">
+        <h3 class="h6 mb-0">{% translate "Ventas vs. Compras" %}</h3>
+        <small class="text-body-secondary">
+          {% translate "Comparación mes a mes y el margen que queda entre ambas" %}
+        </small>
+      </div>
+      <div class="card-body pt-0">
+        <div id="chart-ventas-compras"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="h6 text-uppercase text-body-secondary fw-semibold mb-2">
+  <i class="fa-solid fa-clock-rotate-left fa-fw"></i> {% translate "Últimos movimientos" %}
+</h2>
+<div class="row g-3 mb-4">
+  <div class="col-xl-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header d-flex justify-content-between align-items-center gap-2">
+        <h3 class="h6 mb-0">{% translate "Últimos documentos emitidos" %}</h3>
+        <a href="{% url 'billing:emitidos' %}" class="btn btn-sm btn-outline-secondary">
+          {% translate "Ver todos" %} <i class="fa-solid fa-chevron-right fa-fw small"></i>
+        </a>
+      </div>
+      <div class="card-body pt-0">
+        {% include "_table.html" with table_id="tabla-ultimos-documentos" data_id="datos-ultimos-documentos" columns_id="columnas-ultimos-documentos" rows=stats.ultimos_documentos columns=last_documents_columns %}
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header d-flex justify-content-between align-items-center gap-2">
+        <h3 class="h6 mb-0">{% translate "Últimos documentos recibidos" %}</h3>
+        <a href="{% url 'billing:recibidos' %}" class="btn btn-sm btn-outline-secondary">
+          {% translate "Ver todos" %} <i class="fa-solid fa-chevron-right fa-fw small"></i>
+        </a>
+      </div>
+      <div class="card-body pt-0">
+        {% include "_table.html" with table_id="tabla-ultimos-recibidos" data_id="datos-ultimos-recibidos" columns_id="columnas-ultimos-recibidos" rows=stats.ultimos_recibidos columns=last_received_columns %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="h6 text-uppercase text-body-secondary fw-semibold mb-2">
+  <i class="fa-solid fa-circle-check fa-fw"></i> {% translate "Estado y folios" %}
+</h2>
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">
+        <h3 class="h6 mb-0">{% translate "Estado ante el SII" %}</h3>
+        <small class="text-body-secondary">{% translate "Documentos emitidos en el período" %}</small>
+      </div>
+      <div class="card-body pt-0">
+        <div id="chart-estado-sii"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">
+        <h3 class="h6 mb-0">{% translate "Estado RCV de recibidos" %}</h3>
+        <small class="text-body-secondary">{% translate "Documentos recibidos en el período" %}</small>
+      </div>
+      <div class="card-body pt-0">
+        <div id="chart-estado-rcv"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center gap-2">
+    <div>
+      <h3 class="h6 mb-0">{% translate "Folios por tipo de documento" %}</h3>
+      <small class="text-body-secondary">{% translate "Cuántos quedan disponibles en los CAF cargados" %}</small>
+    </div>
+    <a href="{% url 'billing_settings:folios' %}" class="btn btn-sm btn-outline-secondary">
+      {% translate "Administrar" %} <i class="fa-solid fa-chevron-right fa-fw small"></i>
+    </a>
+  </div>
+  <div class="card-body pt-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead>
+          <tr class="text-body-secondary">
+            <th>{% translate "Tipo" %}</th>
+            <th class="text-end">{% translate "Disponibles" %}</th>
+            <th class="text-end">{% translate "Siguiente" %}</th>
+            <th class="text-end">{% translate "Días restantes" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for folio in stats.folios_por_tipo %}
+            <tr>
+              <td>{{ folio.tipo_dte.label }}</td>
+              <td class="text-end">
+                {% if folio.disponibles <= folio.alerta %}
+                  <span class="badge text-bg-warning" title="{% translate 'Folios por agotar' %}">
+                    <i class="fa-solid fa-triangle-exclamation fa-fw"></i> {{ folio.disponibles }}
+                  </span>
+                {% else %}
+                  {{ folio.disponibles }}
+                {% endif %}
+              </td>
+              <td class="text-end">{{ folio.siguiente }}</td>
+              <td class="text-end">
+                {% if folio.dias_restantes is not None %}
+                  {{ folio.dias_restantes }}
+                {% else %}
+                  <span class="text-body-secondary">—</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td class="text-body-secondary text-center py-4" colspan="4">
+                <i class="fa-solid fa-inbox fa-fw d-block fs-3 mb-2"></i>
+                {% translate "Sin CAF cargados." %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<h2 class="h6 text-uppercase text-body-secondary fw-semibold mb-2">
+  <i class="fa-solid fa-ranking-star fa-fw"></i> {% translate "Concentración" %}
+</h2>
+<div class="row g-3">
+  <div class="col-xl-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">
+        <h3 class="h6 mb-0">{% translate "Top receptores por monto facturado" %}</h3>
+        <small class="text-body-secondary">{% translate "Los 5 clientes que más pesan en el período" %}</small>
+      </div>
+      <div class="card-body pt-0">
+        <div id="chart-top-receptores"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">
+        <h3 class="h6 mb-0">{% translate "Top proveedores por gasto" %}</h3>
+        <small class="text-body-secondary">{% translate "Los 5 proveedores que más pesan en el período" %}</small>
+      </div>
+      <div class="card-body pt-0">
+        <div id="chart-top-proveedores"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ stats.grafico_periodo|json_script:"datos-grafico-periodo" }}
+{{ stats.grafico_ventas_compras|json_script:"datos-grafico-ventas-compras" }}
+{{ stats.grafico_estado|json_script:"datos-grafico-estado" }}
+{{ stats.grafico_rcv|json_script:"datos-grafico-rcv" }}
+{{ stats.grafico_receptores|json_script:"datos-grafico-receptores" }}
+{{ stats.grafico_proveedores|json_script:"datos-grafico-proveedores" }}
+<script
+  src="https://cdn.jsdelivr.net/npm/apexcharts@7.4.0/dist/apexcharts.min.js"
+  integrity="sha384-fnhrfzODrKsQTTXTYoDIc5f/SIP1KuiO4hz6PmkcIBHYVaAj8QpSOtByqodkU2iO"
+  crossorigin="anonymous"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Colores y grosores salen de las custom properties de Bootstrap, no
+    // de hex fijos: así los gráficos usan la misma paleta que el resto de
+    // la página y siguen al tema sin una hoja de estilos aparte. Bootstrap
+    // es dependencia dura de este layout, por eso no hay valor de
+    // respaldo — sin su CSS la página entera ya no se ve.
+    const bs = (nombre) =>
+      getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
+
+    // `--bs-blue` y compañía no cambian con el tema; `--bs-body-color`,
+    // `--bs-border-color` y `--bs-body-bg` sí. Se lee todo junto cada vez
+    // que hace falta repintar.
+    const tema = () => {
+      const oscuro =
+        document.documentElement.getAttribute('data-bs-theme') === 'dark';
+      return {
+      modo: oscuro ? 'dark' : 'light',
+      texto: bs('--bs-body-color'),
+      tenue: bs('--bs-secondary-color'),
+      borde: bs('--bs-border-color'),
+      fondo: bs('--bs-body-bg'),
+      // Paleta categórica (una serie por tipo de DTE). Son tonos de la
+      // escala de Bootstrap, pero escritos acá porque Bootstrap solo
+      // expone como variables CSS los 11 colores base y la escala de
+      // grises — las escalas 100..900 de cada color son Sass y no
+      // llegan al navegador. El orden no es decorativo: está elegido
+      // para que cada par vecino se distinga con visión normal y con
+      // daltonismo. El tema oscuro usa sus propios pasos (índigo y
+      // púrpura más claros; naranja, verde azulado y amarillo más
+      // oscuros) porque los del tema claro no contrastan contra el
+      // fondo oscuro. El gris del último lugar es deliberado: es el
+      // tipo de documento menos frecuente y no queda otro tono que se
+      // distinga de los nueve anteriores.
+      series: oscuro
+        ? ['#0d6efd', '#ca6510', '#1aa179', '#8540f5', '#dc3545',
+           '#0aa2c0', '#8c68cd', '#198754', '#b38600', '#adb5bd']
+        : ['#0d6efd', '#fd7e14', '#20c997', '#6610f2', '#dc3545',
+           '#0aa2c0', '#6f42c1', '#198754', '#cc9a06', '#6c757d'],
+      // Para una serie que exceda la paleta: se agrupan todas en un
+      // neutro en vez de repetir un color ya usado, que haría ilegible
+      // la leyenda.
+      serieExtra: oscuro ? bs('--bs-gray-500') : bs('--bs-gray-600'),
+      primario: bs('--bs-primary'),
+      naranja: bs('--bs-orange'),
+      exito: bs('--bs-success'),
+      alerta: bs('--bs-warning'),
+      peligro: bs('--bs-danger'),
+      info: bs('--bs-info'),
+      neutro: bs('--bs-gray-500'),
+      secundario: bs('--bs-secondary'),
+      blanco: bs('--bs-white'),
+      };
+    };
+
+    // El signo va antes del '$' (un margen negativo se lee '-$2.000',
+    // no '$-2.000').
+    const monto = (valor) => {
+      const numero = Math.round(Number(valor) || 0);
+      return (numero < 0 ? '-$' : '$') + Math.abs(numero).toLocaleString('es-CL');
+    };
+
+    // Monto abreviado, para los rótulos que van *dentro* del gráfico
+    // (ejes y etiquetas de dato): a ancho de media tarjeta, un
+    // "$1.128.120" por barra se pisa con el vecino, "$1,1M" no.
+    const montoCorto = (valor) => {
+      const numero = Math.round(Number(valor) || 0);
+      const signo = numero < 0 ? '-' : '';
+      const absoluto = Math.abs(numero);
+      if (absoluto >= 1000000) {
+        return signo + '$' + (absoluto / 1000000).toLocaleString('es-CL', { maximumFractionDigits: 1 }) + 'M';
+      }
+      if (absoluto >= 1000) {
+        return signo + '$' + Math.round(absoluto / 1000).toLocaleString('es-CL') + 'K';
+      }
+      return signo + '$' + absoluto.toLocaleString('es-CL');
+    };
+
+    const entero = (valor) => Math.round(Number(valor) || 0);
+
+    // `clusterGroupedSeries` en false: por defecto ApexCharts agrupa la
+    // leyenda por tipo de serie (las barras por un lado, la línea por
+    // otro) y apila cada grupo en vertical, que con un tipo de DTE por
+    // serie se come el alto útil del gráfico; en falso queda una sola
+    // lista que fluye en horizontal y se corta en varias filas.
+    const leyenda = (t) => ({
+      position: 'top',
+      horizontalAlign: 'center',
+      fontSize: '11px',
+      itemMargin: { horizontal: 8, vertical: 2 },
+      markers: { size: 5 },
+      clusterGroupedSeries: false,
+      labels: { colors: t.texto },
+    });
+
+    const etiquetasX = (t) => ({
+      rotate: -45,
+      rotateAlways: true,
+      style: { fontSize: '11px', colors: t.tenue },
+    });
+
+    const grilla = (t) => ({
+      borderColor: t.borde,
+      strokeDashArray: 4,
+      xaxis: { lines: { show: false } },
+      yaxis: { lines: { show: true } },
+    });
+
+    // Pastilla del rótulo de dato: se pinta del color de la serie, que
+    // siempre es un color saturado de la paleta, así que el texto va en
+    // blanco en los dos temas.
+    const pastilla = (t) => ({
+      enabled: true,
+      foreColor: t.blanco,
+      borderWidth: 0,
+      borderRadius: 3,
+      padding: 3,
+      opacity: 1,
+      dropShadow: { enabled: false },
+    });
+
+    const datos = (id) => JSON.parse(document.getElementById(id).textContent);
+
+    // Cada gráfico se declara como función del tema, así el toggle solo
+    // vuelve a pedir las opciones y las reaplica.
+    const graficos = [];
+
+    const render = (selector, fabrica) => {
+      const grafico = new ApexCharts(document.querySelector(selector), fabrica(tema()));
+      grafico.render();
+      graficos.push({ grafico, fabrica });
+    };
+
+    // ApexCharts fija los colores al construirse y el botón de tema
+    // cambia `data-bs-theme` sin recargar la página, así que hay que
+    // avisarle a cada gráfico ya renderizado.
+    new MutationObserver(function () {
+      const t = tema();
+      graficos.forEach(({ grafico, fabrica }) => {
+        grafico.updateOptions(fabrica(t), false, false);
+      });
+    }).observe(document.documentElement, { attributeFilter: ['data-bs-theme'] });
+
+    // Documentos por mes (barras apiladas por tipo) + monto total del
+    // período (línea, eje derecho) — volumen y valor en el mismo
+    // gráfico: ¿se factura más seguido, o de mayor monto por documento?
+    // Los números van en el total de cada columna y en la línea: cada
+    // segmento por separado es demasiado angosto para rotularlo.
+    const periodoData = datos('datos-grafico-periodo');
+    const periodoMontoLabel = '{% translate "Monto ($)" %}';
+    const periodoNombres = periodoData.series.map((entry) => entry.nombre);
+    render('#chart-documentos-por-mes', (t) => ({
+      series: [
+        ...periodoData.series.map((entry) => ({
+          name: entry.nombre,
+          type: 'bar',
+          data: entry.datos,
+        })),
+        { name: periodoMontoLabel, type: 'line', data: periodoData.montos },
+      ],
+      chart: {
+        type: 'line',
+        height: 430,
+        stacked: true,
+        toolbar: { show: false },
+        foreColor: t.texto,
+        background: 'transparent',
+      },
+      theme: { mode: t.modo },
+      colors: [
+        ...periodoData.series.map((_entry, i) => t.series[i] || t.serieExtra),
+        t.exito,
+      ],
+      // Ancho 0 en las barras: `stroke` se aplica a todas las series y
+      // solo la línea final debe trazarse.
+      stroke: { width: [...periodoNombres.map(() => 0), 3], curve: 'smooth' },
+      markers: { size: [...periodoNombres.map(() => 0), 4], strokeColors: t.fondo, strokeWidth: 2 },
+      plotOptions: {
+        bar: {
+          borderRadius: 4,
+          // Solo se redondea el tope de la pila: redondear cada segmento
+          // parte la columna en pastillas sueltas.
+          borderRadiusApplication: 'end',
+          columnWidth: '60%',
+          dataLabels: {
+            total: {
+              enabled: true,
+              formatter: entero,
+              // No es de ninguna serie: se le da el gris secundario para
+              // que la pastilla contraste con el fondo en los dos temas.
+              style: { fontSize: '11px', fontWeight: 'bold', color: t.secundario },
+            },
+          },
+        },
+      },
+      dataLabels: {
+        enabled: true,
+        enabledOnSeries: [periodoNombres.length],
+        background: pastilla(t),
+        offsetY: -8,
+        style: { fontSize: '10px', fontWeight: 'bold', colors: [t.exito] },
+        formatter: (val) => (val > 0 ? montoCorto(val) : ''),
+      },
+      grid: grilla(t),
+      xaxis: { categories: periodoData.etiquetas, labels: etiquetasX(t), axisBorder: { color: t.borde }, axisTicks: { color: t.borde } },
+      yaxis: [
+        {
+          seriesName: periodoNombres,
+          title: { text: '{% translate "Documentos" %}', style: { color: t.tenue } },
+          labels: { formatter: entero, style: { colors: t.tenue } },
+        },
+        {
+          seriesName: periodoMontoLabel,
+          opposite: true,
+          title: { text: periodoMontoLabel, style: { color: t.tenue } },
+          labels: { formatter: montoCorto, style: { colors: t.tenue } },
+        },
+      ],
+      legend: leyenda(t),
+      tooltip: { shared: true, intersect: false, theme: t.modo },
+    }));
+
+    // Ventas vs. Compras (barras agrupadas, no apiladas) + margen
+    // (línea, eje derecho) — de un vistazo: ¿el margen mejora o empeora
+    // mes a mes?
+    const ventasComprasData = datos('datos-grafico-ventas-compras');
+    const ventasLabel = '{% translate "Ventas" %}';
+    const comprasLabel = '{% translate "Compras" %}';
+    const margenLabel = '{% translate "Margen" %}';
+    render('#chart-ventas-compras', (t) => ({
+      series: [
+        { name: ventasLabel, type: 'bar', data: ventasComprasData.ventas },
+        { name: comprasLabel, type: 'bar', data: ventasComprasData.compras },
+        { name: margenLabel, type: 'line', data: ventasComprasData.margen },
+      ],
+      chart: {
+        type: 'line',
+        height: 430,
+        toolbar: { show: false },
+        foreColor: t.texto,
+        background: 'transparent',
+      },
+      theme: { mode: t.modo },
+      colors: [t.primario, t.naranja, t.exito],
+      stroke: { width: [0, 0, 3], curve: 'smooth' },
+      markers: { size: [0, 0, 4], strokeColors: t.fondo, strokeWidth: 2 },
+      plotOptions: {
+        bar: {
+          borderRadius: 4,
+          borderRadiusApplication: 'end',
+          columnWidth: '70%',
+          // El rótulo va arriba de la barra (dentro iría del mismo color
+          // que ella) y `hideOverflowingLabels` se apaga: por defecto
+          // ApexCharts esconde el rótulo más ancho que su barra, y acá
+          // casi todos lo son.
+          dataLabels: { position: 'top', hideOverflowingLabels: false },
+        },
+      },
+      dataLabels: {
+        enabled: true,
+        enabledOnSeries: [0, 1, 2],
+        background: pastilla(t),
+        offsetY: -8,
+        style: {
+          fontSize: '9px',
+          fontWeight: 'bold',
+          colors: [t.primario, t.naranja, t.exito],
+        },
+        formatter: (val) => (val ? montoCorto(val) : ''),
+      },
+      grid: grilla(t),
+      xaxis: { categories: ventasComprasData.etiquetas, labels: etiquetasX(t), axisBorder: { color: t.borde }, axisTicks: { color: t.borde } },
+      yaxis: [
+        {
+          seriesName: [ventasLabel, comprasLabel],
+          title: { text: '{% translate "Ventas / Compras ($)" %}', style: { color: t.tenue } },
+          labels: { formatter: montoCorto, style: { colors: t.tenue } },
+        },
+        {
+          seriesName: margenLabel,
+          opposite: true,
+          title: { text: '{% translate "Margen ($)" %}', style: { color: t.tenue } },
+          labels: { formatter: montoCorto, style: { colors: t.tenue } },
+        },
+      ],
+      legend: leyenda(t),
+      tooltip: { shared: true, intersect: false, theme: t.modo, y: { formatter: monto } },
+    }));
+
+    // Los donuts rotulan la cantidad, no el porcentaje: el porcentaje ya
+    // se lee del tamaño de la porción, el número de documentos es el dato
+    // que se va a mirar. Las porciones en cero no se rotulan.
+    const donut = (selector, etiquetaTotal, colores, grafico) => {
+      render(selector, (t) => ({
+        series: grafico.datos,
+        chart: { type: 'donut', height: 340, foreColor: t.texto, background: 'transparent' },
+        theme: { mode: t.modo },
+        labels: grafico.etiquetas,
+        colors: colores(t),
+        // El separador entre porciones es el fondo de la tarjeta, no un
+        // blanco fijo que en tema oscuro quedaría marcado.
+        stroke: { colors: [t.fondo], width: 2 },
+        plotOptions: {
+          pie: {
+            donut: {
+              size: '62%',
+              labels: {
+                show: true,
+                name: { color: t.tenue },
+                value: { fontSize: '22px', fontWeight: 600, color: t.texto },
+                total: {
+                  show: true,
+                  label: etiquetaTotal,
+                  color: t.tenue,
+                  formatter: (w) =>
+                    w.globals.seriesTotals
+                      .reduce((acumulado, valor) => acumulado + valor, 0)
+                      .toLocaleString('es-CL'),
+                },
+              },
+            },
+          },
+        },
+        dataLabels: {
+          enabled: true,
+          style: { fontSize: '12px', fontWeight: 'bold' },
+          dropShadow: { enabled: false },
+          formatter: (_porcentaje, opciones) => {
+            const valor = opciones.w.config.series[opciones.seriesIndex];
+            return valor > 0 ? valor.toLocaleString('es-CL') : '';
+          },
+        },
+        legend: leyenda(t),
+        tooltip: { theme: t.modo, y: { formatter: entero } },
+      }));
+    };
+
+    donut(
+      '#chart-estado-sii',
+      '{% translate "Documentos" %}',
+      (t) => [t.exito, t.alerta, t.peligro, t.neutro],
+      datos('datos-grafico-estado'),
+    );
+    // Con acuse / Pendiente / Recibido automático / Rechazado / Sin registrar.
+    donut(
+      '#chart-estado-rcv',
+      '{% translate "Recibidos" %}',
+      (t) => [t.exito, t.alerta, t.info, t.peligro, t.neutro],
+      datos('datos-grafico-rcv'),
+    );
+
+    // `barHeight` acotado: son top 5, y con una o dos categorías la barra
+    // se estiraría a todo el alto del gráfico.
+    const barraHorizontal = (selector, nombre, color, grafico) => {
+      render(selector, (t) => ({
+        series: [{ name: nombre, data: grafico.datos }],
+        chart: { type: 'bar', height: 320, toolbar: { show: false }, foreColor: t.texto, background: 'transparent' },
+        theme: { mode: t.modo },
+        colors: [color(t)],
+        plotOptions: {
+          bar: {
+            horizontal: true,
+            borderRadius: 4,
+            borderRadiusApplication: 'end',
+            barHeight: '55%',
+            dataLabels: { position: 'center' },
+          },
+        },
+        dataLabels: {
+          enabled: true,
+          style: { fontSize: '12px', fontWeight: 'bold', colors: [t.blanco] },
+          formatter: (val) => (val ? monto(val) : ''),
+        },
+        grid: grilla(t),
+        xaxis: {
+          categories: grafico.etiquetas,
+          labels: { formatter: montoCorto, style: { colors: t.tenue } },
+          axisBorder: { color: t.borde },
+          axisTicks: { color: t.borde },
+        },
+        yaxis: { labels: { style: { fontSize: '11px', colors: t.tenue }, maxWidth: 160 } },
+        legend: { show: false },
+        tooltip: { theme: t.modo, y: { formatter: monto } },
+      }));
+    };
+
+    barraHorizontal(
+      '#chart-top-receptores',
+      '{% translate "Total facturado" %}',
+      (t) => t.primario,
+      datos('datos-grafico-receptores'),
+    );
+    barraHorizontal(
+      '#chart-top-proveedores',
+      '{% translate "Total gastado" %}',
+      (t) => t.naranja,
+      datos('datos-grafico-proveedores'),
+    );
+  });
+</script>

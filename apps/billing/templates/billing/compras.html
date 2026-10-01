@@ -1,0 +1,66 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Compras" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Compras" %}</li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{% translate "Compras" %}</h1>
+    <a href="{% url 'billing:compras_registro' %}" class="btn btn-outline-secondary">
+      <i class="fa-solid fa-building-columns fa-fw"></i> {% translate "Registro compras SII" %}
+    </a>
+  </div>
+  <div class="card" id="compras-periodos-card">
+    <div class="card-header">{% translate "Períodos" %}</div>
+    <div class="card-body">
+      <div id="tabla-compras"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      new Tabulator('#tabla-compras', {
+        layout: 'fitColumns',
+        placeholder: '{% translate "Sin datos" %}',
+
+        // Paginación/filtro/orden en el servidor — ver
+        // `billing.api.views.ComprasPeriodosListView`.
+        ajaxURL: '{% url "billing_api:compras_periodos" %}',
+        pagination: true,
+        paginationMode: 'remote',
+        paginationSize: 20,
+        filterMode: 'remote',
+        sortMode: 'remote',
+
+        columns: [
+          {
+            title: '{% translate "Período" %}', field: 'periodo_glosa',
+            widthGrow: 1, minWidth: 160, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Documentos" %}', field: 'documentos',
+            hozAlign: 'right', width: 160, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Total" %}', field: 'total', hozAlign: 'right',
+            formatter: 'money', formatterParams: {symbol: '$', precision: 0},
+            width: 160, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Acciones" %}', field: 'acciones',
+            width: 130, hozAlign: 'center', headerSort: false,
+            formatter: 'html',
+          },
+        ],
+      });
+    });
+  </script>
+{% endblock %}

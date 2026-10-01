@@ -1,0 +1,324 @@
+{% extends "layouts/app.html" %}
+{% load i18n humanize %}
+
+{% block title %}{{ documento.tipo_dte.label }} N.° {{ documento.folio }} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:emitidos' %}">{% translate "Emitidos" %}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">
+    {{ documento.tipo_dte.label }} N.° {{ documento.folio }}
+  </li>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-start justify-content-between mb-3 gap-3 flex-wrap">
+    <div>
+      <h1 class="h3 mb-1">
+        {{ documento.tipo_dte.label }}
+        <span class="badge bg-secondary">{% translate "Folio" %} {{ documento.folio }}</span>
+      </h1>
+      {% if documento.revision_estado %}
+        {% if 'RLV' in documento.revision_estado or 'RPR' in documento.revision_estado %}
+          <span class="badge bg-warning text-dark">{{ documento.revision_estado }}</span>
+        {% else %}
+          <span class="badge bg-success">{{ documento.revision_estado }}</span>
+        {% endif %}
+      {% endif %}
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'billing:emitido_descargar_pdf' documento.pk %}"
+         class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-file-pdf fa-fw"></i> {% translate "Descargar PDF" %}
+      </a>
+      <a href="{% url 'billing:receptor_detalle' documento.receptor.pk %}"
+         class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-user fa-fw"></i> {% translate "Ir al receptor" %}
+      </a>
+      <a href="{% url 'billing:emitidos' %}" class="btn btn-outline-secondary btn-sm btn-volver">
+        <i class="fa-solid fa-arrow-left fa-fw"></i> {% translate "Volver" %}
+      </a>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link active" id="general-tab" data-bs-toggle="tab"
+         href="#general" role="tab" aria-controls="general">
+        {% translate "General" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="preview-tab" data-bs-toggle="tab"
+         href="#preview" role="tab" aria-controls="preview">
+        {% translate "Vista previa" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="xml-tab" data-bs-toggle="tab"
+         href="#xml" role="tab" aria-controls="xml">
+        {% translate "XML" %}
+      </a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="general" role="tabpanel"
+         aria-labelledby="general-tab">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <div class="card h-100" id="general_receptor-card">
+            <div class="card-header">{% translate "Receptor" %}</div>
+            <div class="card-body">
+              <h6 class="fw-semibold mb-1">{{ documento.receptor.razon_social|default:"—" }}</h6>
+              <p class="text-muted small mb-2">
+                RUT {{ documento.receptor.rut }}-{{ documento.receptor.dv }}
+              </p>
+              {% if documento.receptor.giro %}
+                <p class="text-muted small mb-1">
+                  <i class="fa-solid fa-briefcase fa-fw"></i> {{ documento.receptor.giro }}
+                </p>
+              {% endif %}
+              {% if documento.receptor.direccion %}
+                <p class="text-muted small mb-1">
+                  <i class="fa-solid fa-location-dot fa-fw"></i> {{ documento.receptor.direccion }}
+                  {% if documento.receptor.comuna %}, {{ documento.receptor.comuna.glosa }}{% endif %}
+                  {% if documento.receptor.ciudad %}, {{ documento.receptor.ciudad }}{% endif %}
+                </p>
+              {% endif %}
+              {% if documento.receptor.correo %}
+                <p class="text-muted small mb-0">
+                  <i class="fa-solid fa-envelope fa-fw"></i> {{ documento.receptor.correo }}
+                </p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card h-100" id="general_totales-card">
+            <div class="card-header">{% translate "Totales" %}</div>
+            <div class="card-body p-0">
+              {% comment %}
+                `intcomma:False` fuerza coma como separador de miles,
+                igual que el formatter 'money' que ya usan las tablas
+                Tabulator de la app — sin el :False, `intcomma` usa el
+                separador de LANGUAGE_CODE ('es-cl', que es espacio).
+              {% endcomment %}
+              <table class="table table-sm mb-0">
+                {% if documento.neto %}
+                  <tr>
+                    <td class="ps-3 text-muted">{% translate "Neto" %}</td>
+                    <td class="pe-3 text-end">${{ documento.neto|intcomma:False }}</td>
+                  </tr>
+                {% endif %}
+                {% if documento.exento %}
+                  <tr>
+                    <td class="ps-3 text-muted">{% translate "Exento" %}</td>
+                    <td class="pe-3 text-end">${{ documento.exento|intcomma:False }}</td>
+                  </tr>
+                {% endif %}
+                {% if documento.iva %}
+                  <tr>
+                    <td class="ps-3 text-muted">IVA</td>
+                    <td class="pe-3 text-end">${{ documento.iva|intcomma:False }}</td>
+                  </tr>
+                {% endif %}
+                <tr class="table-light">
+                  <td class="ps-3 fw-semibold">{% translate "Total" %}</td>
+                  <td class="pe-3 text-end fw-semibold fs-6">${{ documento.total|intcomma:False }}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card h-100" id="general_documento-card">
+            <div class="card-header">{% translate "Documento" %}</div>
+            <div class="card-body p-0">
+              <table class="table table-sm mb-0">
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Período" %}</td>
+                  <td class="pe-3 text-end">{{ documento.periodo }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Fecha" %}</td>
+                  <td class="pe-3 text-end">{{ documento.fecha }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Creado el" %}</td>
+                  <td class="pe-3 text-end">{{ documento.fecha_hora_creacion }}</td>
+                </tr>
+                <tr>
+                  <td class="ps-3 text-muted">{% translate "Creado por" %}</td>
+                  <td class="pe-3 text-end">{{ documento.usuario }}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-0">
+        <div class="col-12">
+          <div class="card" id="general_detalle-card">
+            <div class="card-header">{% translate "Detalle" %}</div>
+            <div class="card-body">
+              <table class="table table-sm mb-0">
+                <thead>
+                  <tr class="text-muted">
+                    <th>{% translate "Ítem" %}</th>
+                    <th class="text-end">{% translate "Cantidad" %}</th>
+                    <th class="text-end">{% translate "Precio" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in detalle_items %}
+                    <tr>
+                      <td>{{ item.nombre }}</td>
+                      <td class="text-end">{{ item.cantidad|default:"—" }}</td>
+                      <td class="text-end">
+                        {% if item.precio %}${{ item.precio|intcomma:False }}{% else %}—{% endif %}
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="3" class="text-muted">{% translate "Sin ítems" %}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-0">
+        <div class="col-12">
+          <div class="card" id="general_sii-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span><i class="fa-solid fa-paper-plane fa-fw"></i> {% translate "Estado SII" %}</span>
+              {% if documento.revision_estado %}
+                {% if 'RLV' in documento.revision_estado or 'RPR' in documento.revision_estado %}
+                  <span class="badge bg-warning text-dark">{{ documento.revision_estado }}</span>
+                {% else %}
+                  <span class="badge bg-success">{{ documento.revision_estado }}</span>
+                {% endif %}
+              {% endif %}
+            </div>
+            <div class="card-body">
+              {% if documento.track_id %}
+                <p class="mb-2">
+                  <span class="text-muted">Track ID:</span>
+                  <code>{{ documento.track_id }}</code>
+                </p>
+              {% endif %}
+              {% if documento.revision_detalle %}
+                <p class="text-muted small mb-2">{{ documento.revision_detalle }}</p>
+              {% else %}
+                <p class="text-muted small mb-2">
+                  {% translate "Sin información de envío al SII." %}
+                </p>
+              {% endif %}
+              {% if not documento.track_id %}
+                <a href="{% url 'billing:emitido_enviar_sii' documento.pk %}"
+                   class="btn btn-primary btn-sm">
+                  <i class="fa-solid fa-paper-plane fa-fw"></i> {% translate "Enviar al SII" %}
+                </a>
+              {% else %}
+                <form method="post" action="{% url 'billing:emitido_actualizar_estado' documento.pk %}"
+                      data-submit-lock="{% translate 'Consultando al SII…' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa-solid fa-rotate fa-fw"></i> {% translate "Actualizar estado" %}
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="preview" role="tabpanel"
+         aria-labelledby="preview-tab">
+      <div class="card" id="preview_documento-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>{% translate "Vista previa" %}</span>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-print-preview">
+              <i class="fa-solid fa-print fa-fw"></i> {% translate "Imprimir" %}
+            </button>
+            <a href="{% url 'billing:emitido_descargar_pdf' documento.pk %}"
+               class="btn btn-outline-secondary btn-sm">
+              <i class="fa-solid fa-file-pdf fa-fw"></i> {% translate "Descargar PDF" %}
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <iframe id="preview-iframe"
+                  data-src="{% url 'billing:emitido_render_html' documento.pk %}"
+                  style="width: 100%; height: 700px; border: none;"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="xml" role="tabpanel"
+         aria-labelledby="xml-tab">
+      <div class="card" id="xml_contenido-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>XML</span>
+          <a href="{% url 'billing:emitido_descargar_xml' documento.pk %}"
+             class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-download fa-fw"></i> {% translate "Descargar XML" %}
+          </a>
+        </div>
+        <div class="card-body">
+          <pre class="small mb-0" style="max-height: 500px; overflow: auto;">{{ documento.xml }}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // El iframe se carga recién al abrir la pestaña (no en el load de
+      // la página) — cada carga es una llamada real a la API
+      // (`emitido_render_html`), no vale la pena pagarla si nadie
+      // mira la vista previa.
+      //
+      // Al entrar directo con "#preview" en la URL, `Tabs.init()` (ver
+      // `_derafu_js.html`) ya deja la pestaña activa ANTES de que este
+      // script alcance a suscribirse a `shown.bs.tab` — el evento se
+      // pierde y el iframe queda sin cargar. Por eso también se revisa
+      // el estado actual al cargar, no solo el evento futuro.
+      const tabPreview = document.getElementById('preview-tab');
+      const iframe = document.getElementById('preview-iframe');
+      if (tabPreview && iframe) {
+        function cargarPreviewSiCorresponde() {
+          if (!iframe.getAttribute('src') && tabPreview.classList.contains('active')) {
+            iframe.src = iframe.dataset.src;
+          }
+        }
+        tabPreview.addEventListener('shown.bs.tab', cargarPreviewSiCorresponde);
+        cargarPreviewSiCorresponde();
+      }
+
+      const btnPrint = document.getElementById('btn-print-preview');
+      if (btnPrint && iframe) {
+        btnPrint.addEventListener('click', function () {
+          if (iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+          }
+        });
+      }
+    });
+  </script>
+{% endblock %}

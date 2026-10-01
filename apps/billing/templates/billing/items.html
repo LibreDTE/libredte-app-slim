@@ -1,0 +1,140 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Ítems" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Ítems" %}</li>
+{% endblock %}
+
+{% block settings_content %}
+  <h1 class="h3 mb-3">{% translate "Ítems" %}</h1>
+
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link active" id="productos-tab" data-bs-toggle="tab"
+         href="#productos" role="tab" aria-controls="productos">
+        {% translate "Productos y/o servicios" %}
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link" id="categorias-tab" data-bs-toggle="tab"
+         href="#categorias" role="tab" aria-controls="categorias">
+        {% translate "Categorías" %}
+      </a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="productos" role="tabpanel"
+         aria-labelledby="productos-tab">
+      <div class="d-flex justify-content-end mb-3">
+        <a href="{% url 'billing_settings:item_nuevo' %}" class="btn btn-primary">
+          {% translate "+ Nuevo ítem" %}
+        </a>
+      </div>
+      <div id="tabla-items"></div>
+    </div>
+    <div class="tab-pane fade" id="categorias" role="tabpanel"
+         aria-labelledby="categorias-tab">
+      <div class="d-flex justify-content-end mb-3">
+        <a href="{% url 'billing_settings:item_categoria_nueva' %}" class="btn btn-primary">
+          {% translate "+ Nueva categoría" %}
+        </a>
+      </div>
+      <div id="tabla-item-categorias"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Si se llega con #categorias en la URL (ej. al volver de crear/
+      // editar/eliminar una), activar esa pestaña — Bootstrap no lo
+      // hace por su cuenta a partir del hash.
+      if (window.location.hash) {
+        var trigger = document.querySelector(
+          '.nav-link[href="' + window.location.hash + '"]',
+        );
+        if (trigger) {
+          new bootstrap.Tab(trigger).show();
+        }
+      }
+
+      new Tabulator('#tabla-items', {
+        layout: 'fitColumns',
+        placeholder: '{% translate "Sin datos" %}',
+        ajaxURL: '{% url "billing_api:items" %}',
+        pagination: true,
+        paginationMode: 'remote',
+        paginationSize: 20,
+        filterMode: 'remote',
+        sortMode: 'remote',
+
+        columns: [
+          {
+            title: '{% translate "Código" %}', field: 'codigo',
+            width: 140, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Nombre" %}', field: 'nombre',
+            widthGrow: 2, minWidth: 160, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Categoría" %}', field: 'categoria',
+            widthGrow: 1, minWidth: 140, headerFilter: 'input',
+          },
+          {
+            title: '{% translate "Precio" %}', field: 'precio',
+            width: 120, hozAlign: 'right',
+          },
+          {
+            // Sin filtro: es un booleano en el modelo.
+            title: '{% translate "Bruto" %}', field: 'bruto',
+            width: 90,
+          },
+          {
+            // Sin filtro: es un booleano en el modelo.
+            title: '{% translate "Activo" %}', field: 'activo',
+            width: 100,
+          },
+          {
+            title: '{% translate "Acciones" %}', field: 'acciones',
+            width: 100, hozAlign: 'center', headerSort: false,
+            formatter: 'html',
+          },
+        ],
+      });
+
+      new Tabulator('#tabla-item-categorias', {
+        layout: 'fitColumns',
+        placeholder: '{% translate "Sin datos" %}',
+        ajaxURL: '{% url "billing_api:item_categorias" %}',
+        pagination: true,
+        paginationMode: 'remote',
+        paginationSize: 20,
+        filterMode: 'remote',
+        sortMode: 'remote',
+
+        columns: [
+          {
+            title: '{% translate "Nombre" %}', field: 'nombre',
+            widthGrow: 1, minWidth: 160, headerFilter: 'input',
+          },
+          {
+            // Sin filtro: es un booleano en el modelo.
+            title: '{% translate "Activa" %}', field: 'activa',
+            width: 100,
+          },
+          {
+            title: '{% translate "Acciones" %}', field: 'acciones',
+            width: 100, hozAlign: 'center', headerSort: false,
+            formatter: 'html',
+          },
+        ],
+      });
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,1115 @@
+{% extends "layouts/app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Emitir" %} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "Emitir" %}</li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">{% translate "Emitir" %}</h1>
+
+  <form method="post" id="form-emitir"
+        data-submit-lock="{% translate 'Generando borrador…' %}">
+    {% csrf_token %}
+
+    <ul class="nav nav-tabs mb-3" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="documento-tab" data-bs-toggle="tab"
+           href="#documento" role="tab" aria-controls="documento">
+          {% translate "Documento" %}
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="receptor-tab" data-bs-toggle="tab"
+           href="#receptor" role="tab" aria-controls="receptor">
+          {% translate "Receptor" %}
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="items-tab" data-bs-toggle="tab"
+           href="#items" role="tab" aria-controls="items">
+          {% translate "Ítems" %}
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="referencias-tab" data-bs-toggle="tab"
+           href="#referencias" role="tab" aria-controls="referencias">
+          {% translate "Referencias" %}
+        </a>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+
+      {# ─── Documento ────────────────────────────────────────────── #}
+      <div class="tab-pane fade show active" id="documento" role="tabpanel"
+           aria-labelledby="documento-tab">
+        <div class="card mb-3" id="documento_identificacion-card">
+          <div class="card-header">{% translate "Identificación" %}</div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="id_tipo_dte">{% translate "Tipo de documento" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.tipo_dte %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_FchEmis">{% translate "Fecha de emisión" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.FchEmis %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_CdgSIISucur">{% translate "Sucursal" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.CdgSIISucur %}
+              </div>
+            </div>
+            <div class="row g-3 mt-0">
+              <div class="col-md-4">
+                <label class="form-label" for="id_RUTSolicita">{% translate "RUT solicitante" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.RUTSolicita %}
+                <div class="form-text">
+                  {% translate "Opcional — RUT de quien solicita el documento, si es distinto del receptor." %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3" id="documento_pago-card">
+          <div class="card-header">{% translate "Condiciones de pago" %}</div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="id_FmaPago">{% translate "Forma de pago" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.FmaPago %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_FchVenc">{% translate "Fecha de vencimiento" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.FchVenc %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_IndServicio">{% translate "Indicador de servicio" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.IndServicio %}
+              </div>
+            </div>
+            <div class="row g-3 mt-0">
+              <div class="col-md-4">
+                <label class="form-label" for="id_CdgVendedor">{% translate "Vendedor" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.CdgVendedor %}
+              </div>
+              <div class="col-md-8">
+                <label class="form-label" for="id_TermPagoGlosa">{% translate "Condición de pago (glosa)" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.TermPagoGlosa %}
+              </div>
+            </div>
+            <div class="row g-3 mt-0">
+              <div class="col-md-4">
+                <label class="form-label" for="id_PeriodoDesde">{% translate "Periodo facturado desde" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.PeriodoDesde %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_PeriodoHasta">{% translate "Periodo facturado hasta" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.PeriodoHasta %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3" id="documento_medio_pago-card">
+          <div class="card-header">{% translate "Detalle del medio de pago" %}</div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label" for="id_MedioPago">{% translate "Medio de pago" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.MedioPago %}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label" for="id_BcoPago">{% translate "Banco" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.BcoPago %}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label" for="id_TpoCtaPago">{% translate "Tipo de cuenta" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.TpoCtaPago %}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label" for="id_NumCtaPago">{% translate "N.° de cuenta" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.NumCtaPago %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3" id="documento_pago_programado-card" data-solo-forma-pago="2">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>{% translate "Pago programado" %}</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-pago">
+              <i class="fa-solid fa-plus fa-fw"></i> {% translate "Agregar cuota" %}
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <p class="text-muted small px-3 pt-3 mb-2">
+              {% translate "Solo aplica a ventas a crédito. Si no se agrega ninguna cuota, se usa la fecha de vencimiento como única fecha de pago." %}
+            </p>
+            {{ pagos_formset.management_form }}
+            {% if pagos_formset.non_form_errors %}
+              <div class="alert alert-danger m-3 mb-0 js-error-no-fila" id="pagos-error-general" role="alert">
+                {% for error in pagos_formset.non_form_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="table-responsive">
+              <table class="table table-sm mb-0" id="tabla-pagos">
+                <thead>
+                  <tr>
+                    <th style="width: 240px;">{% translate "Fecha comprometida de pago" %}</th>
+                    <th style="width: 140px;">{% translate "Cuota a pagar" %}</th>
+                    <th style="min-width: 200px;">{% translate "Glosa" %}</th>
+                    <th style="width: 40px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="pagos-filas">
+                  {% for subform in pagos_formset %}
+                    {% include "billing/_emitir_fila_pago.html" with subform=subform %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3" id="documento_transaccion-card">
+          <div class="card-header">{% translate "Tipo de transacción" %}</div>
+          <div class="card-body">
+            <p class="text-muted small">
+              {% translate "Clasificación sugerida para el Libro de Compras/Ventas — el receptor la puede cambiar." %}
+            </p>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label" for="id_TpoTranVenta">{% translate "Transacción (para el vendedor)" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.TpoTranVenta %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="id_TpoTranCompra">{% translate "Transacción (para el comprador)" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.TpoTranCompra %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3" id="documento_guia-card" data-solo-tipo="52">
+          <div class="card-header">{% translate "Guía de despacho" %}</div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-2">
+                <label class="form-label" for="id_IndTraslado">{% translate "Tipo de despacho o traslado" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.IndTraslado %}
+              </div>
+              <div class="col-md-2">
+                <label class="form-label" for="id_DirDest">{% translate "Dirección" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.DirDest %}
+              </div>
+              <div class="col-md-2">
+                <label class="form-label" for="id_CmnaDest">{% translate "Comuna" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.CmnaDest %}
+              </div>
+              <div class="col-md-2">
+                <label class="form-label" for="id_FchSalida">{% translate "Fecha salida" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.FchSalida %}
+              </div>
+              <div class="col-md-2">
+                <label class="form-label" for="id_HraSalida">{% translate "Hora salida" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.HraSalida %}
+              </div>
+              <div class="col-md-2">
+                <label class="form-label" for="id_FchLlegada">{% translate "Fecha llegada" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.FchLlegada %}
+              </div>
+            </div>
+            <div class="row g-3 mt-0">
+              <div class="col-md-2">
+                <label class="form-label" for="id_RUTTrans">{% translate "Transportista" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.RUTTrans %}
+              </div>
+              <div class="col-md-2">
+                <label class="form-label" for="id_Patente">{% translate "Patente" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.Patente %}
+              </div>
+              <div class="col-md-2">
+                <label class="form-label" for="id_PatenteCarro">{% translate "Patente carro" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.PatenteCarro %}
+              </div>
+              <div class="col-md-2">
+                <label class="form-label" for="id_RUTChofer">{% translate "RUT chofer" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.RUTChofer %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_NombreChofer">{% translate "Nombre chofer" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.NombreChofer %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="documento_exportacion-card" data-solo-tipo="110,111,112">
+          <div class="card-header">{% translate "Exportación" %}</div>
+          <div class="card-body">
+            <p class="text-muted small">
+              {% translate "Los datos del receptor extranjero (ciudad, país, documento de identidad) se ingresan en la pestaña Receptor." %}
+            </p>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label" for="id_TpoMoneda">{% translate "Moneda del documento" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.TpoMoneda %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="id_TpoCambio">{% translate "Tipo de cambio a pesos" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.TpoCambio %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# ─── Receptor ─────────────────────────────────────────────── #}
+      <div class="tab-pane fade" id="receptor" role="tabpanel"
+           aria-labelledby="receptor-tab">
+        <div class="card mb-3" id="receptor_datos-card">
+          <div class="card-header">{% translate "Datos básicos" %}</div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="id_RUTRecep">{% translate "RUT" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.RUTRecep %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_RznSocRecep">{% translate "Razón social" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.RznSocRecep %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_GiroRecep">{% translate "Giro" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.GiroRecep %}
+              </div>
+            </div>
+            <div class="row g-3 mt-0">
+              <div class="col-md-4">
+                <label class="form-label" for="id_CdgIntRecep">{% translate "Código interno" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.CdgIntRecep %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_Contacto">{% translate "Teléfono" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.Contacto %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_CorreoRecep">{% translate "Correo" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.CorreoRecep %}
+              </div>
+            </div>
+            <div class="row g-3 mt-0">
+              <div class="col-md-8">
+                <label class="form-label" for="id_DirRecep">{% translate "Dirección" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.DirRecep %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_CmnaRecep">{% translate "Comuna" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.CmnaRecep %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% comment %}
+          Sugerencias del catálogo de receptores del contribuyente
+          activo — pobladas por JS más abajo (ver extra_js). Una por
+          campo: cada una llena SU propio campo con el valor elegido
+          (RUT, código interno o razón social respectivamente); el
+          `focusout` en cualquiera de los tres dispara la búsqueda
+          exacta que rellena el resto.
+        {% endcomment %}
+        <datalist id="datalist-receptores-rut"></datalist>
+        <datalist id="datalist-receptores-codigo-interno"></datalist>
+        <datalist id="datalist-receptores-razon-social"></datalist>
+
+        <div class="card" id="receptor_extranjero-card">
+          <div class="card-header">{% translate "Datos adicionales" %}</div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="id_CiudadRecep">{% translate "Ciudad" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.CiudadRecep %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_Nacionalidad">{% translate "País" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.Nacionalidad %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_NumId">{% translate "Documento de identidad" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.NumId %}
+                <div class="form-text">
+                  {% translate "En su país de origen — no es un RUT chileno." %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# ─── Ítems ────────────────────────────────────────────────── #}
+      <div class="tab-pane fade" id="items" role="tabpanel"
+           aria-labelledby="items-tab">
+        <div class="card mb-3" id="items_detalle-card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>{% translate "Ítems del documento" %}</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-item">
+              <i class="fa-solid fa-plus fa-fw"></i> {% translate "Agregar ítem" %}
+            </button>
+          </div>
+          <div class="card-body p-0">
+            {{ items_formset.management_form }}
+            {% if items_formset.non_form_errors %}
+              <div class="alert alert-danger m-3 mb-0 js-error-no-fila" id="items-error-general" role="alert">
+                {% for error in items_formset.non_form_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="table-responsive">
+              <table class="table table-sm mb-0" id="tabla-items">
+                <thead>
+                  <tr>
+                    <th style="width: 90px;">{% translate "Tipo de código" %}</th>
+                    <th style="width: 110px;">{% translate "Código" %}</th>
+                    <th style="min-width: 200px;">{% translate "Nombre" %}</th>
+                    <th style="min-width: 140px;">{% translate "Descripción" %}</th>
+                    <th style="width: 110px;">{% translate "Exento" %}</th>
+                    <th style="width: 90px;">{% translate "Cantidad" %}</th>
+                    <th style="width: 80px;">{% translate "Unidad" %}</th>
+                    <th style="width: 120px;">{% translate "Precio unit." %}</th>
+                    <th style="min-width: 160px;">{% translate "Impuesto adicional" %}</th>
+                    <th style="width: 100px;">{% translate "Descuento" %}</th>
+                    <th style="width: 90px;">{% translate "Tipo" %}</th>
+                    <th style="width: 100px;">{% translate "Subtotal" %}</th>
+                    <th style="width: 40px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="items-filas">
+                  {% for subform in items_formset %}
+                    {% include "billing/_emitir_fila_item.html" with subform=subform %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        {% comment %}
+          Sugerencias para el campo "Código" de cada fila — poblada por
+          JS con el catálogo de /settings/billing/items/ (ver extra_js
+          más abajo). Compartida por todas las filas, incluidas las
+          que se agreguen dinámicamente.
+        {% endcomment %}
+        <datalist id="datalist-items"></datalist>
+
+        <div class="card mb-3" id="items_descuento_global-card">
+          <div class="card-header">{% translate "Descuento global" %}</div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="id_ValorDR_global">{% translate "Valor del descuento" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.ValorDR_global %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="id_TpoValor_global">{% translate "Tipo" %}</label>
+                {% include "_widget_errors.html" with field=documento_form.TpoValor_global %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% comment %}
+          Recalculados en vivo por JS (ver extra_js,
+          `billing:emitir_calcular`) cada vez que cambia un precio,
+          cantidad, descuento, exento o el tipo de documento — nunca
+          se envían con el formulario, son solo de lectura. "—"
+          mientras no haya un cálculo válido todavía (ver
+          `limpiarTotales()`).
+        {% endcomment %}
+        <div class="card" id="items_totales-card">
+          <div class="card-header">{% translate "Totales" %}</div>
+          <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+              <tr>
+                <td class="ps-3 text-muted">{% translate "Neto" %}</td>
+                <td class="pe-3 text-end" id="total-neto">—</td>
+              </tr>
+              <tr>
+                <td class="ps-3 text-muted">{% translate "Exento" %}</td>
+                <td class="pe-3 text-end" id="total-exento">—</td>
+              </tr>
+              <tr>
+                <td class="ps-3 text-muted">IVA</td>
+                <td class="pe-3 text-end" id="total-iva">—</td>
+              </tr>
+              {% comment %}
+                Solo aparece con un impuesto adicional de retención (ej.
+                "IVA retenido") — ese monto NO se suma a "Total": el
+                comprador lo retiene y lo entera directo al SII, no se
+                le cobra al emisor (`Encabezado.Totales.ImptoReten`).
+              {% endcomment %}
+              <tr>
+                <td class="ps-3 text-muted">{% translate "IVA retenido" %}</td>
+                <td class="pe-3 text-end" id="total-iva-retenido">—</td>
+              </tr>
+              <tr class="table-light">
+                <td class="ps-3 fw-semibold">{% translate "Total" %}</td>
+                <td class="pe-3 text-end fw-semibold fs-6" id="total-general">—</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {# ─── Referencias ──────────────────────────────────────────── #}
+      <div class="tab-pane fade" id="referencias" role="tabpanel"
+           aria-labelledby="referencias-tab">
+        <div class="card" id="referencias_detalle-card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>{% translate "Documentos referenciados" %}</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-referencia">
+              <i class="fa-solid fa-plus fa-fw"></i> {% translate "Agregar referencia" %}
+            </button>
+          </div>
+          <div class="card-body p-0">
+            {{ referencias_formset.management_form }}
+            {% if referencias_formset.non_form_errors %}
+              <div class="alert alert-danger m-3 mb-0 js-error-no-fila" id="referencias-error-general" role="alert">
+                {% for error in referencias_formset.non_form_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="table-responsive">
+              <table class="table table-sm mb-0" id="tabla-referencias">
+                <thead>
+                  <tr>
+                    <th style="width: 110px;">{% translate "Tipo doc." %}</th>
+                    <th style="width: 110px;">{% translate "Folio" %}</th>
+                    <th style="width: 150px;">{% translate "Fecha" %}</th>
+                    <th style="min-width: 220px;">{% translate "Motivo" %}</th>
+                    <th style="min-width: 200px;">{% translate "Razón" %}</th>
+                    <th style="width: 40px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="referencias-filas">
+                  {% for subform in referencias_formset %}
+                    {% include "billing/_emitir_fila_referencia.html" with subform=subform %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">
+      {% translate "Emitir" %}
+    </button>
+  </form>
+
+  {# ─── Plantillas de fila (no se envían — solo las clona el JS) ──── #}
+  <template id="plantilla-item">
+    {% include "billing/_emitir_fila_item.html" with subform=items_formset.empty_form %}
+  </template>
+
+  <template id="plantilla-referencia">
+    {% include "billing/_emitir_fila_referencia.html" with subform=referencias_formset.empty_form %}
+  </template>
+
+  <template id="plantilla-pago">
+    {% include "billing/_emitir_fila_pago.html" with subform=pagos_formset.empty_form %}
+  </template>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Agrega una fila al final de un `FormSet`: clona la fila
+      // `<template>` (viene de `formset.empty_form`, con `__prefix__`
+      // en vez de un índice — convención de Django para esto, ver
+      // `BaseFormSet.empty_form`), reemplaza `__prefix__` por el
+      // índice real (el valor actual de `TOTAL_FORMS`) y lo agrega al
+      // `<tbody>` — después incrementa `TOTAL_FORMS` para que Django
+      // sepa que hay una fila más al recibir el POST.
+      function agregarFilaFormset(prefijo, idCuerpo, idPlantilla) {
+        var totalInput = document.getElementById('id_' + prefijo + '-TOTAL_FORMS');
+        var indice = parseInt(totalInput.value, 10);
+        var plantilla = document.getElementById(idPlantilla);
+        var html = plantilla.innerHTML.split('__prefix__').join(indice);
+        document.getElementById(idCuerpo).insertAdjacentHTML('beforeend', html);
+        totalInput.value = indice + 1;
+      }
+
+      // Recalcular ítems/totales en vivo, sin persistir nada (ver
+      // `views.emitir_calcular()`) — no reimplementa la matemática acá,
+      // solo pinta lo que devuelve el mismo builder que se usa al
+      // emitir de verdad. Dispara en los mismos campos que afectan los
+      // montos: precio/cantidad/descuento/exento/impuesto adicional de
+      // una fila, el descuento global, o el tipo de documento. `change`
+      // y no `focusout`: hace falta también en los `<select>` (Exento,
+      // Impuesto adicional, Tipo de descuento, Tipo de documento).
+      var CAMPOS_QUE_RECALCULAN =
+        /^(items-\d+-(PrcItem|QtyItem|ValorDR|TpoValor|IndExe|CodImpAdic)|ValorDR_global|TpoValor_global|tipo_dte)$/;
+
+      function limpiarTotales() {
+        document.querySelectorAll('.item-subtotal').forEach(function (celda) {
+          celda.textContent = '—';
+        });
+        ['neto', 'exento', 'iva', 'iva-retenido', 'general'].forEach(
+          function (campo) {
+            document.getElementById('total-' + campo).textContent = '—';
+          },
+        );
+      }
+
+      function formatearMonto(valor) {
+        return '$' + Number(valor || 0).toLocaleString('en-US');
+      }
+
+      function recalcularTotales() {
+        fetch('{% url "billing:emitir_calcular" %}', {
+          method: 'POST',
+          body: new FormData(document.getElementById('form-emitir')),
+          headers: {Accept: 'application/json'},
+        })
+          .then(function (response) {
+            if (response.ok) {
+              return response.json();
+            }
+            // 400 (formulario todavía incompleto) o 500 (la API del
+            // SDK devolvió un error real) — ninguno se oculta en
+            // silencio, ambos quedan en consola.
+            return response.json().then(function (cuerpo) {
+              console.error(
+                'Error al recalcular los totales de /billing/emitir:',
+                cuerpo && cuerpo.detail,
+                cuerpo && cuerpo.errors,
+              );
+              return null;
+            });
+          })
+          .then(function (resultado) {
+            // El formulario todavía no es válido (filas a medio
+            // llenar, es lo esperable mientras se escribe) — se
+            // limpia en vez de dejar montos que ya no corresponden.
+            if (!resultado) {
+              limpiarTotales();
+              return;
+            }
+            resultado.items.forEach(function (item) {
+              var campoCodigo = document.querySelector(
+                '[name="items-' + item.index + '-VlrCodigo"]',
+              );
+              if (!campoCodigo) {
+                return;
+              }
+              campoCodigo
+                .closest('tr')
+                .querySelector('.item-subtotal').textContent =
+                formatearMonto(item.MontoItem);
+            });
+            document.getElementById('total-neto').textContent =
+              formatearMonto(resultado.totales.MntNeto);
+            document.getElementById('total-exento').textContent =
+              formatearMonto(resultado.totales.MntExe);
+            document.getElementById('total-iva').textContent =
+              formatearMonto(resultado.totales.IVA);
+            // No se suma a "Total": es el monto que el comprador
+            // retiene y entera directo al SII (impuesto adicional de
+            // retención, ej. "IVA retenido"), no algo que se le cobre
+            // al emisor.
+            var ivaRetenido = (resultado.totales.ImptoReten || []).reduce(
+              function (suma, impuesto) {
+                return suma + impuesto.MontoImp;
+              },
+              0,
+            );
+            document.getElementById('total-iva-retenido').textContent =
+              formatearMonto(ivaRetenido);
+            document.getElementById('total-general').textContent =
+              formatearMonto(resultado.totales.MntTotal);
+          })
+          .catch(function (error) {
+            console.error(
+              'Error al recalcular los totales de /billing/emitir:',
+              error,
+            );
+            limpiarTotales();
+          });
+      }
+
+      document.addEventListener('change', function (event) {
+        if (
+          event.target.name &&
+          CAMPOS_QUE_RECALCULAN.test(event.target.name)
+        ) {
+          recalcularTotales();
+        }
+      });
+
+      document.getElementById('btn-agregar-item').addEventListener('click', function () {
+        agregarFilaFormset('items', 'items-filas', 'plantilla-item');
+      });
+      document.getElementById('btn-agregar-referencia').addEventListener('click', function () {
+        agregarFilaFormset('referencias', 'referencias-filas', 'plantilla-referencia');
+      });
+      document.getElementById('btn-agregar-pago').addEventListener('click', function () {
+        agregarFilaFormset('pagos', 'pagos-filas', 'plantilla-pago');
+      });
+
+      // Delegado: el botón "Quitar" vive en filas que no existían al
+      // cargar la página, por eso se escucha en el documento. Tilda el
+      // campo oculto `DELETE` de la fila (`can_delete=True`, ver
+      // `forms.py`) y la oculta — no la saca del DOM. Sacarla del DOM
+      // entero dejaría sus campos completamente ausentes del POST, y
+      // como `QtyItem`/`IndExe` tienen un `initial` propio (`1`/`'0'`),
+      // Django detectaría esa ausencia como "cambió" respecto a su
+      // valor por defecto y validaría la fila igual (fallando por sus
+      // campos requeridos) en vez de tratarla como vacía. Con `DELETE`
+      // tildado, `is_valid()` nunca valida el resto de sus campos, sea
+      // cual sea su estado (ver `views.py::_filled_rows()`).
+      document.addEventListener('click', function (event) {
+        var boton = event.target.closest('.btn-quitar-fila');
+        if (!boton) {
+          return;
+        }
+        var fila = boton.closest('tr');
+        var campoEliminar = fila.querySelector('input[name$="-DELETE"]');
+        if (campoEliminar) {
+          campoEliminar.checked = true;
+        }
+        fila.hidden = true;
+        // Quitar una fila de ítems cambia los totales sin que dispare
+        // ningún `change` — hay que recalcular a mano acá. Una
+        // referencia o un pago programado no afectan los montos.
+        if (fila.closest('#items-filas')) {
+          recalcularTotales();
+        }
+      });
+
+      // Sugerencias del catálogo mientras se escribe el código de un
+      // ítem — se piden una sola vez al cargar la página (son pocos
+      // ítems, se filtran en el navegador vía <datalist> nativo, sin
+      // pedir de nuevo en cada tecla — ver `billing_api:item_buscar`
+      // sin parámetros).
+      fetch('{% url "billing_api:item_buscar" %}', {
+        headers: {Accept: 'application/json'},
+      })
+        .then(function (response) {
+          return response.ok ? response.json() : [];
+        })
+        .then(function (items) {
+          var datalist = document.getElementById('datalist-items');
+          items.forEach(function (item) {
+            var opcion = document.createElement('option');
+            opcion.value = item.codigo;
+            opcion.textContent = item.nombre;
+            datalist.appendChild(opcion);
+          });
+        })
+        .catch(function () {}); // Sin sugerencias si falla — no bloquea nada.
+
+      // Autocompletar una fila de ítem al perder foco su código —
+      // equivalente a `DTE.setItem()` de legacy. Delegado en el
+      // documento (mismo motivo que "Quitar": filas agregadas después
+      // de cargar la página). `focusout` y no `blur`: `blur` no
+      // burbujea, nunca llegaría a un listener delegado acá arriba.
+      // Valores en blanco de una fila sin ítem seleccionado — los
+      // mismos que trae `ItemForm` sin datos (ver `forms.py`): se usan
+      // para limpiar la fila si se borra el código ya buscado.
+      var ITEM_VACIO = {
+        NmbItem: '',
+        DscItem: '',
+        IndExe: '0',
+        UnmdItem: '',
+        PrcItem: '',
+        CodImpAdic: '',
+        ValorDR: '',
+        TpoValor: '%',
+      };
+
+      document.addEventListener('focusout', function (event) {
+        var campoCodigo = event.target.closest('input[name$="-VlrCodigo"]');
+        if (!campoCodigo) {
+          return;
+        }
+        var fila = campoCodigo.closest('tr');
+        if (!campoCodigo.value.trim()) {
+          // Código borrado: la fila ya no corresponde a ningún ítem
+          // buscado, se limpian los datos que había autocompletado.
+          Object.keys(ITEM_VACIO).forEach(function (campo) {
+            var input = fila.querySelector('[name$="-' + campo + '"]');
+            if (input) {
+              input.value = ITEM_VACIO[campo];
+            }
+          });
+          recalcularTotales();
+          return;
+        }
+        var tipoCodigo = fila.querySelector(
+          'input[name$="-TpoCodigo"]',
+        ).value.trim();
+        var params = new URLSearchParams({codigo: campoCodigo.value.trim()});
+        if (tipoCodigo) {
+          params.set('codigo_tipo', tipoCodigo);
+        }
+        fetch('{% url "billing_api:item_buscar" %}?' + params, {
+          headers: {Accept: 'application/json'},
+        })
+          .then(function (response) {
+            return response.ok ? response.json() : null;
+          })
+          .then(function (item) {
+            if (!item) {
+              return; // No existe/inactivo (404): no se toca la fila.
+            }
+            Object.keys(item).forEach(function (campo) {
+              var input = fila.querySelector('[name$="-' + campo + '"]');
+              if (input) {
+                input.value = item[campo];
+              }
+            });
+            // `input.value = ...` no dispara `change` — hay que
+            // recalcular a mano, si no el precio recién autocompletado
+            // nunca actualiza el subtotal/totales.
+            recalcularTotales();
+          })
+          .catch(function () {}); // Falla de red: tampoco se toca la fila.
+      });
+
+      // Sugerencias del catálogo de receptores — una vez al cargar,
+      // igual que con los ítems (ver más arriba). Tres <datalist>, uno
+      // por campo, cada uno con el valor que corresponde llenar en
+      // ESE campo si se elige esa sugerencia.
+      fetch('{% url "billing_api:receptor_buscar" %}', {
+        headers: {Accept: 'application/json'},
+      })
+        .then(function (response) {
+          return response.ok ? response.json() : [];
+        })
+        .then(function (receptores) {
+          var datalistRut = document.getElementById('datalist-receptores-rut');
+          var datalistCodigo = document.getElementById(
+            'datalist-receptores-codigo-interno',
+          );
+          var datalistRazon = document.getElementById(
+            'datalist-receptores-razon-social',
+          );
+          receptores.forEach(function (receptor) {
+            var opcionRut = document.createElement('option');
+            opcionRut.value = receptor.rut;
+            opcionRut.textContent = receptor.razon_social;
+            datalistRut.appendChild(opcionRut);
+
+            if (receptor.codigo_interno) {
+              var opcionCodigo = document.createElement('option');
+              opcionCodigo.value = receptor.codigo_interno;
+              opcionCodigo.textContent = receptor.razon_social;
+              datalistCodigo.appendChild(opcionCodigo);
+            }
+
+            if (receptor.razon_social) {
+              var opcionRazon = document.createElement('option');
+              opcionRazon.value = receptor.razon_social;
+              opcionRazon.textContent = receptor.rut;
+              datalistRazon.appendChild(opcionRazon);
+            }
+          });
+        })
+        .catch(function () {}); // Sin sugerencias si falla — no bloquea nada.
+
+      // Valores en blanco de un receptor sin buscar — los mismos que
+      // trae `DocumentoForm` sin datos (ver `forms.py`): se usan para
+      // limpiar el formulario si se borra el campo ya buscado.
+      var RECEPTOR_VACIO = {
+        RUTRecep: '',
+        RznSocRecep: '',
+        GiroRecep: '',
+        CdgIntRecep: '',
+        Contacto: '',
+        CorreoRecep: '',
+        DirRecep: '',
+        CmnaRecep: '',
+        CiudadRecep: '',
+        Nacionalidad: '',
+        NumId: '',
+      };
+
+      // Autocompletar el receptor al perder foco su RUT, código
+      // interno o razón social — cualquiera de los tres dispara la
+      // misma búsqueda (`ReceptorBuscarView` prioriza en ese orden).
+      // A diferencia de los ítems, acá no hay formset: los campos son
+      // fijos, se referencian directo por `id`.
+      ['id_RUTRecep', 'id_CdgIntRecep', 'id_RznSocRecep'].forEach(
+        function (idCampo) {
+          document.getElementById(idCampo).addEventListener(
+            'focusout',
+            function (event) {
+              var valor = event.target.value.trim();
+              if (!valor) {
+                // Campo de búsqueda borrado: ya no hay ningún
+                // receptor identificado, se limpia todo lo que se
+                // había autocompletado (incluidos los otros dos
+                // campos de búsqueda).
+                Object.keys(RECEPTOR_VACIO).forEach(function (campo) {
+                  var input = document.getElementById('id_' + campo);
+                  if (input) {
+                    input.value = RECEPTOR_VACIO[campo];
+                  }
+                });
+                recalcularTotales();
+                return;
+              }
+              var parametro = {
+                id_RUTRecep: 'rut',
+                id_CdgIntRecep: 'codigo_interno',
+                id_RznSocRecep: 'razon_social',
+              }[idCampo];
+              var params = new URLSearchParams();
+              params.set(parametro, valor);
+              fetch(
+                '{% url "billing_api:receptor_buscar" %}?' + params,
+                {headers: {Accept: 'application/json'}},
+              )
+                .then(function (response) {
+                  return response.ok ? response.json() : null;
+                })
+                .then(function (receptor) {
+                  if (!receptor) {
+                    return; // 404 (no existe): no se toca el formulario.
+                  }
+                  Object.keys(receptor).forEach(function (campo) {
+                    var input = document.getElementById('id_' + campo);
+                    if (input) {
+                      input.value = receptor[campo];
+                    }
+                  });
+                  // Completa los campos mínimos que pide el cálculo
+                  // (Dirección/Comuna/Giro) — puede ser justo lo que
+                  // faltaba para que ahora sí se pueda recalcular.
+                  recalcularTotales();
+                })
+                .catch(function () {}); // Falla de red: tampoco se toca.
+            },
+          );
+        },
+      );
+
+      // Mostrar "Guía de despacho"/"Exportación"/"Receptor extranjero"
+      // solo para su tipo de documento — el resto del tiempo quedan
+      // ocultas (no se borran del DOM: si el usuario alcanzó a llenar
+      // algo y cambia de tipo por error, no pierde lo escrito). Sus
+      // campos se deshabilitan al ocultarse: `hidden` es solo visual,
+      // un input oculto igual viaja en el POST — deshabilitado, el
+      // navegador lo excluye del envío (y de la validación HTML5).
+      var selectTipo = document.getElementById('id_tipo_dte');
+      var seccionesCondicionales = document.querySelectorAll('[data-solo-tipo]');
+
+      function actualizarSeccionesCondicionales() {
+        var opcion = selectTipo.options[selectTipo.selectedIndex];
+        var codigo = opcion ? opcion.dataset.codigo : null;
+        seccionesCondicionales.forEach(function (seccion) {
+          var tipos = seccion.dataset.soloTipo.split(',');
+          var visible = tipos.indexOf(codigo) !== -1;
+          seccion.hidden = !visible;
+          seccion.querySelectorAll('input, select, textarea').forEach(
+            function (campo) {
+              campo.disabled = !visible;
+            },
+          );
+        });
+      }
+
+      selectTipo.addEventListener('change', actualizarSeccionesCondicionales);
+      actualizarSeccionesCondicionales();
+
+      // "Pago programado" solo tiene sentido para venta a crédito
+      // (FmaPago=2) — mismo criterio que usa el parser server-side
+      // (`EstandarParserStrategy::addScheduledPayment()`) para decidir
+      // si arma `MntPagos`.
+      var selectFmaPago = document.getElementById('id_FmaPago');
+      var seccionesPorFormaPago = document.querySelectorAll('[data-solo-forma-pago]');
+
+      function actualizarSeccionesPorFormaPago() {
+        seccionesPorFormaPago.forEach(function (seccion) {
+          var formas = seccion.dataset.soloFormaPago.split(',');
+          var visible = formas.indexOf(selectFmaPago.value) !== -1;
+          seccion.hidden = !visible;
+          // Mismo criterio que `actualizarSeccionesCondicionales()`:
+          // `hidden` es solo visual, una cuota escrita y después
+          // ocultada seguiría viajando en el POST. Se excluyen los
+          // campos del `management_form`, que vive dentro de esta
+          // misma tarjeta: deshabilitarlos deja al `FormSet` sin
+          // `TOTAL_FORMS` y Django rechaza el envío entero. Sin sus
+          // filas, `TOTAL_FORMS` sigue contándolas pero cada una
+          // llega con todos sus campos ausentes y `PagoForm` no tiene
+          // ningún `initial`, así que Django las trata como vacías.
+          seccion
+            .querySelectorAll('tbody input, tbody select, tbody textarea')
+            .forEach(function (campo) {
+              campo.disabled = !visible;
+            });
+        });
+      }
+
+      selectFmaPago.addEventListener('change', actualizarSeccionesPorFormaPago);
+      actualizarSeccionesPorFormaPago();
+
+      // ─── Validación en el navegador ──────────────────────────────
+      // La validación nativa no sirve para este formulario: está
+      // repartido en pestañas y un campo requerido de una pestaña
+      // cerrada no es "focusable", así que el navegador cancela el
+      // envío sin mostrar nada y sin abrir la pestaña donde está el
+      // problema. Safari, además, no muestra globo ni para un campo
+      // visible. Se hace a mano: marcar cada campo inválido con su
+      // mensaje debajo y llevar la vista hasta el primero.
+      //
+      // `noValidate` se apaga desde JS y no en el HTML a propósito: si
+      // este script no llega a correr, el navegador sigue siendo la
+      // red de contención (y el servidor siempre revalida igual, ver
+      // `views.py::emitir()`).
+      var formEmitir = document.getElementById('form-emitir');
+      formEmitir.noValidate = true;
+
+      // Mensajes propios donde el del navegador viene en su idioma y
+      // no en el de la app; para el resto de los casos (formato de
+      // fecha, largo máximo, etc.) el del navegador ya es específico.
+      var MENSAJES_VALIDACION = {
+        valueMissing: '{% translate "Este campo es obligatorio." %}',
+      };
+
+      function mensajeDeValidacion(campo) {
+        var claves = Object.keys(MENSAJES_VALIDACION);
+        for (var i = 0; i < claves.length; i++) {
+          if (campo.validity[claves[i]]) {
+            return MENSAJES_VALIDACION[claves[i]];
+          }
+        }
+        return campo.validationMessage;
+      }
+
+      // Saca la marca y TODO mensaje pegado al campo: el propio
+      // (`js-error-validacion`) y el que dejó el servidor
+      // (`_widget_errors.html`). El del servidor también se va porque
+      // habla de un valor que el usuario ya cambió — dejarlo haría que
+      // el campo muestre dos mensajes, uno de ellos ya falso.
+      function limpiarMarcaDeValidacion(campo) {
+        campo.classList.remove('is-invalid');
+        campo.removeAttribute('aria-invalid');
+        var siguiente = campo.nextElementSibling;
+        while (
+          siguiente
+          && (siguiente.classList.contains('js-error-validacion')
+              || siguiente.classList.contains('text-danger'))
+        ) {
+          var aBorrar = siguiente;
+          siguiente = siguiente.nextElementSibling;
+          aBorrar.remove();
+        }
+      }
+
+      function marcarInvalido(campo) {
+        limpiarMarcaDeValidacion(campo);
+        campo.classList.add('is-invalid');
+        // `d-block` porque `.invalid-feedback` solo se muestra solo
+        // cuando es hermano directo del campo con `.is-invalid`, y acá
+        // puede haber un `.form-text` de ayuda en el medio.
+        var mensaje = document.createElement('div');
+        mensaje.className = 'invalid-feedback d-block js-error-validacion';
+        mensaje.textContent = mensajeDeValidacion(campo);
+        campo.insertAdjacentElement('afterend', mensaje);
+      }
+
+      // Lleva la vista hasta el campo. `Tabs.deeplink()` hace todo el
+      // trabajo (abre la pestaña que lo contiene, deja el deeplink en
+      // la URL, resalta el campo y hace scroll hasta él — ver
+      // `_derafu_js.html`); el foco se pide con `preventScroll` para no
+      // competir con ese scroll. Si la pestaña estaba cerrada hay que
+      // esperar a que termine de abrirse: un campo todavía oculto no
+      // acepta el foco.
+      function irAlCampoInvalido(campo) {
+        var pestana = campo.closest('.tab-pane');
+        if (!pestana) {
+          campo.focus();
+          return;
+        }
+        if (!pestana.classList.contains('active')) {
+          document.getElementById(pestana.id + '-tab').addEventListener(
+            'shown.bs.tab',
+            function () {
+              campo.focus({preventScroll: true});
+            },
+            {once: true},
+          );
+          Tabs.deeplink(pestana.id + ':' + campo.id);
+          return;
+        }
+        Tabs.deeplink(pestana.id + ':' + campo.id);
+        campo.focus({preventScroll: true});
+      }
+
+      formEmitir.addEventListener('submit', function (event) {
+        var invalidos = Array.prototype.filter.call(
+          formEmitir.elements,
+          function (campo) {
+            return campo.willValidate && !campo.checkValidity();
+          },
+        );
+        if (!invalidos.length) {
+          return;
+        }
+        event.preventDefault();
+        invalidos.forEach(marcarInvalido);
+        irAlCampoInvalido(invalidos[0]);
+      });
+
+      // Apenas el usuario toca el campo se va su marca — si no, el
+      // error queda contradiciendo lo que se está escribiendo.
+      formEmitir.addEventListener('input', function (event) {
+        if (event.target.classList.contains('is-invalid')) {
+          limpiarMarcaDeValidacion(event.target);
+        }
+      });
+
+      // Errores que el navegador no puede ver y solo detecta el
+      // servidor: los campos requeridos de cada fila (Django nunca les
+      // pone `required` en el HTML — un `FormSet` lo desactiva para
+      // que una fila extra vacía no bloquee el envío), los largos
+      // máximos y las opciones fuera de catálogo. Llegan con la página
+      // ya renderizada, con su mensaje al lado y `aria-invalid="true"`
+      // en el campo. Se les da el mismo trato que a los del cliente
+      // (borde rojo y salto a la pestaña del primero): si no, el error
+      // queda escondido en una pestaña cerrada y la página parece no
+      // haber hecho nada. Corre después de `Tabs.init()`
+      // (`_derafu_js.html` se incluye antes que este script), que al
+      // cargar siempre abre la primera pestaña.
+      // `js-error-no-fila` son los errores del `FormSet` entero, que
+      // no cuelgan de ningún campo ("agrega al menos un ítem", un
+      // `management_form` manipulado) — entran en el mismo orden de
+      // documento que los campos, así que el primero del conjunto es
+      // el primero de la página.
+      var conErrorDelServidor = formEmitir.querySelectorAll(
+        '[aria-invalid="true"], .js-error-no-fila',
+      );
+      if (conErrorDelServidor.length) {
+        conErrorDelServidor.forEach(function (elemento) {
+          if (elemento.hasAttribute('aria-invalid')) {
+            elemento.classList.add('is-invalid');
+          }
+        });
+        irAlCampoInvalido(conErrorDelServidor[0]);
+      }
+    });
+  </script>
+{% endblock %}

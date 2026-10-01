@@ -1,0 +1,68 @@
+{% extends "layouts/app.html" %}
+{% load i18n humanize %}
+
+{% block title %}{% translate "RCV de ventas" %} {{ periodo_glosa }} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Facturación" %}</li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:ventas' %}">{% translate "Ventas" %}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'billing:ventas_periodo' periodo %}">{{ periodo_glosa }}</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">{% translate "RCV" %}</li>
+{% endblock %}
+
+{% block content %}
+  <h1 class="h3 mb-3">{% translate "RCV de ventas" %} — {{ periodo_glosa }}</h1>
+
+  <div class="alert alert-info" role="alert">
+    <i class="fa-solid fa-circle-info fa-fw"></i>
+    {% translate "Esta es una consulta en línea al Registro de Compras y Ventas del SII — no son los datos locales de" %}
+    <a href="{% url 'billing:ventas_periodo' periodo %}">{% translate "Ventas" %}</a>, {% translate "y pueden diferir de ellos." %}
+  </div>
+
+  <div class="card" id="rcv-ventas-resumen-card">
+    <div class="card-header">{% translate "Resumen por tipo de documento" %}</div>
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr class="text-muted">
+            <th class="ps-3">{% translate "Tipo de documento" %}</th>
+            <th class="text-end">{% translate "Documentos" %}</th>
+            <th class="text-end">{% translate "Exento" %}</th>
+            <th class="text-end">{% translate "Neto" %}</th>
+            <th class="text-end">IVA</th>
+            <th class="text-end">{% translate "Total" %}</th>
+            <th class="text-center pe-3">{% translate "Ver" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for fila in resumen %}
+            <tr>
+              <td class="ps-3">{{ fila.dcvNombreTipoDoc }}</td>
+              <td class="text-end">{{ fila.rsmnTotDoc }}</td>
+              <td class="text-end">${{ fila.rsmnMntExe|intcomma:False }}</td>
+              <td class="text-end">${{ fila.rsmnMntNeto|intcomma:False }}</td>
+              <td class="text-end">${{ fila.rsmnMntIVA|intcomma:False }}</td>
+              <td class="text-end">${{ fila.rsmnMntTotal|intcomma:False }}</td>
+              <td class="text-center pe-3">
+                {% if fila.rsmnLink %}
+                  <a href="{% url 'billing:ventas_periodo_rcv_detalle' periodo fila.rsmnTipoDocInteger %}"
+                     class="btn btn-sm btn-outline-primary" title="{% translate 'Ver detalle' %}" aria-label="{% translate 'Ver detalle' %}">
+                    <i class="fa-solid fa-magnifying-glass fa-fw"></i>
+                  </a>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-muted py-3">{% translate "Sin datos" %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

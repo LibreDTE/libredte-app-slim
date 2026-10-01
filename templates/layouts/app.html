@@ -1,0 +1,133 @@
+{% load i18n menu_extras %}<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}LibreDTE Slim{% endblock %}</title>
+  {% include "_authenticated_head.html" %}
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  {% include "_authenticated_topbar.html" %}
+
+  <div class="app-shell">
+    <nav class="app-sidebar d-none d-md-block bg-body-tertiary border-end py-3">
+      {% if current_contribuyente %}
+        <div class="px-3 pb-2 mb-2 border-bottom sidebar-contribuyente">
+          {{ current_contribuyente.razon_social }}
+          <br>
+          <small class="text-muted">
+            {{ current_contribuyente.rut }}-{{ current_contribuyente.dv }}
+          </small>
+        </div>
+      {% endif %}
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.view_name == 'core:dashboard' %}active{% endif %}"
+             href="{% url 'core:dashboard' %}" title="{% translate 'Dashboard' %}">
+            <i class="fa-solid fa-gauge fa-fw"></i>
+            <span class="sidebar-label">{% translate "Dashboard" %}</span>
+          </a>
+        </li>
+
+        {% for section in menu_sections %}
+          <li class="nav-item">
+            <a class="nav-link d-flex justify-content-between align-items-center"
+               data-bs-toggle="collapse" href="#nav-group-{{ forloop.counter }}" role="button"
+               aria-expanded="{% if section|section_is_active:request.path %}true{% else %}false{% endif %}"
+               aria-controls="nav-group-{{ forloop.counter }}" title="{{ section.label }}">
+              <span>
+                <i class="fa-solid fa-{{ section.icon }} fa-fw"></i>
+                <span class="sidebar-label">{{ section.label }}</span>
+              </span>
+              <i class="fa-solid fa-chevron-down small sidebar-chevron"></i>
+            </a>
+            <div class="collapse {% if section|section_is_active:request.path %}show{% endif %}"
+                 id="nav-group-{{ forloop.counter }}">
+              <ul class="nav nav-pills flex-column ms-3">
+                {% for item in section.items %}
+                  <li class="nav-item">
+                    <a class="nav-link {% if item.url_name == section|active_menu_url_name:request.path %}active{% endif %}"
+                       href="{% url item.url_name %}" title="{{ item.label }}">
+                      <i class="fa-solid fa-{{ item.icon }} fa-fw"></i>
+                      <span class="sidebar-label">{{ item.label }}</span>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <div class="small text-uppercase text-muted fw-semibold mt-3 mb-1 px-3 sidebar-label">
+        {% translate "Cuenta" %}
+      </div>
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'core_settings:settings_index' %}"
+             title="{% translate 'Configuración' %}">
+            <i class="fa-solid fa-gear fa-fw"></i>
+            <span class="sidebar-label">{% translate "Configuración" %}</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.view_name == 'libredte:contribuyentes' %}active{% endif %}"
+             href="{% url 'libredte:contribuyentes' %}" title="{% translate 'Contribuyentes' %}">
+            <i class="fa-solid fa-building fa-fw"></i>
+            <span class="sidebar-label">{% translate "Contribuyentes" %}</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.view_name == 'profile' %}active{% endif %}"
+             href="{% url 'profile' %}" title="{% translate 'Mi perfil' %}">
+            <i class="fa-solid fa-user fa-fw"></i>
+            <span class="sidebar-label">{% translate "Mi perfil" %}</span>
+          </a>
+        </li>
+        {% if user.is_staff %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'admin:index' %}" title="{% translate 'Admin' %}">
+              <i class="fa-solid fa-toolbox fa-fw"></i>
+              <span class="sidebar-label">{% translate "Admin" %}</span>
+            </a>
+          </li>
+        {% endif %}
+        <li class="nav-item">
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="nav-link btn btn-link text-start w-100"
+                    title="{% translate 'Cerrar sesión' %}">
+              <i class="fa-solid fa-right-from-bracket fa-fw"></i>
+              <span class="sidebar-label">{% translate "Cerrar sesión" %}</span>
+            </button>
+          </form>
+        </li>
+      </ul>
+    </nav>
+    <main class="app-main py-3 px-3 bg-body-tertiary">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% url 'core:dashboard' %}" title="{% translate 'Dashboard' %}">
+              <i class="fa-solid fa-house fa-fw"></i>
+            </a>
+          </li>
+          {% block breadcrumbs %}{% endblock %}
+        </ol>
+      </nav>
+      {% include "_messages.html" %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <footer class="border-top py-3 mt-3 px-3 text-muted small">
+    &copy; {% now "Y" %} LibreDTE Slim.
+  </footer>
+
+  {% include "_assets_js.html" %}
+  {% include "_authenticated_scripts.html" %}
+  {% include "_derafu_js.html" %}
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

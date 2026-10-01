@@ -1,0 +1,34 @@
+{% extends "layouts/settings.html" %}
+{% load i18n %}
+
+{% block title %}{{ plugin.label }} — LibreDTE Slim{% endblock %}
+
+{% block breadcrumbs %}
+  <li class="breadcrumb-item">{% translate "Configuración" %}</li>
+  <li class="breadcrumb-item"><a href="{% url 'core_settings:plugins' %}">{% translate "Plugins" %}</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{{ plugin.label }}</li>
+{% endblock %}
+
+{% block settings_content %}
+  <h1 class="h3 mb-3">{{ plugin.label }}</h1>
+  {% if plugin.description %}
+    <p class="text-muted">{{ plugin.description }}</p>
+  {% endif %}
+  {% if capabilities %}
+    <table class="table table-sm">
+      <tr>
+        <th>{% translate "Capacidad" %}</th>
+        <th>{% translate "Descripción" %}</th>
+      </tr>
+      {% for capability in capabilities %}
+        <tr>
+          <td>{{ capability.label }}</td>
+          <td>{{ capability.description }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  {% block plugin_configure_content %}
+    {% include "core/_plugin_configure_form.html" %}
+  {% endblock %}
+{% endblock %}
