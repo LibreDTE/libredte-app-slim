@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.http import HttpRequest, HttpResponseBase
 from django.shortcuts import redirect
 
-EXEMPT_VIEW_NAMES = {'core:setup'}
+EXEMPT_VIEW_NAMES = {'core:setup', 'health'}
 
 
 class RequireInitialUserMiddleware:

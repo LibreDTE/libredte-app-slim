@@ -16,6 +16,7 @@ from socket import gethostbyname, gethostname
 from typing import Any
 
 from django.contrib.messages import constants as message_constants
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 from kombu import Queue
 
@@ -34,10 +35,10 @@ load_dotenv(BASE_DIR / '.env')
 # El valor `django-insecure-...` es solo el fallback de desarrollo
 # (generado por `startproject`) — cualquier despliegue real debe
 # definir `SECRET_KEY` en el entorno (o en `.env`, ver `.env.example`).
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY',
-    'django-insecure-07vz)&t&gr$q)shzaba!*_$fmqx1me2-=usw5bnf=#7uol9mqx',
+_INSECURE_SECRET_KEY = (
+    'django-insecure-07vz)&t&gr$q)shzaba!*_$fmqx1me2-=usw5bnf=#7uol9mqx'
 )
+SECRET_KEY = os.environ.get('SECRET_KEY', _INSECURE_SECRET_KEY)
 
 # Key de cifrado en reposo para `apps.core.fields.EncryptedTextField`
 # (independiente de `SECRET_KEY` — rotar una no debe invalidar la otra).
@@ -45,15 +46,27 @@ SECRET_KEY = os.environ.get(
 # despliegue real debe definir `FIELD_ENCRYPTION_KEY` en el entorno (o
 # en `.env`, ver `.env.example`). Generar una nueva con
 # `Fernet.generate_key()`.
+_INSECURE_FIELD_ENCRYPTION_KEY = '0jTo_joxI5mzGZSb7AWEQeaeCCEXdy9XyUWsEgvk0To='
 FIELD_ENCRYPTION_KEY = os.environ.get(
     'FIELD_ENCRYPTION_KEY',
-    '0jTo_joxI5mzGZSb7AWEQeaeCCEXdy9XyUWsEgvk0To=',
+    _INSECURE_FIELD_ENCRYPTION_KEY,
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Encendido es solo el fallback de desarrollo: un despliegue real define
 # `DEBUG=0` en el entorno.
 DEBUG = os.environ.get('DEBUG', '1') == '1'
+
+# Sin `DEBUG`, los fallbacks de arriba son valores públicos (están en el
+# repositorio): la app no arranca con ellos.
+if not DEBUG and (
+    SECRET_KEY == _INSECURE_SECRET_KEY
+    or FIELD_ENCRYPTION_KEY == _INSECURE_FIELD_ENCRYPTION_KEY
+):
+    raise ImproperlyConfigured(
+        'Con DEBUG=0 se deben definir SECRET_KEY y FIELD_ENCRYPTION_KEY '
+        '(los valores por defecto son públicos).'
+    )
 
 # Dominios del sitio, separados por espacio. El primero es el canónico:
 # con él y `URL_SCHEMA` se arman los enlaces absolutos que salen fuera
@@ -64,15 +77,44 @@ DEBUG = os.environ.get('DEBUG', '1') == '1'
 # de desarrollo.
 HOSTNAME = os.environ.get('SITE_HOSTNAME', 'localhost:8000').split(' ')
 URL_SCHEMA = os.environ.get('SITE_URL_SCHEMA', 'http')
+
+
+def _sin_puerto(host: str) -> str:
+    """El host sin `:puerto` (`ALLOWED_HOSTS` no admite puertos)."""
+    if host.endswith(']'):
+        return host
+    return host.partition(':')[0]
+
+
+# Solo los dominios del sitio, los extra (`SITE_EXTRA_HOSTS`, separados
+# por espacio) y los de loopback/máquina (healthchecks) — nunca `*`: con
+# el `Host` de la petición se arman, por ejemplo, los enlaces de
+# recuperación de contraseña.
 ALLOWED_HOSTS = [
-    '*',
+    *(_sin_puerto(host) for host in HOSTNAME),
+    *os.environ.get('SITE_EXTRA_HOSTS', '').split(),
     'localhost',
     '127.0.0.1',
     '::1',
     gethostname(),
     gethostbyname(gethostname()),
-    *HOSTNAME,
 ]
+
+# Orígenes desde los que Django acepta un `POST` (verificación CSRF): el
+# esquema y los dominios del sitio, con su puerto si lo llevan.
+CSRF_TRUSTED_ORIGINS = [f'{URL_SCHEMA}://{host}' for host in HOSTNAME]
+
+# `SITE_BEHIND_PROXY=1` cuando un proxy inverso (Caddy, Traefik, nginx)
+# termina el TLS y reenvía `X-Forwarded-Proto`. Django solo confía en esa
+# cabecera si el proxy es el único que alcanza a la app (si no, cualquier
+# cliente podría falsearla): por eso no se activa por defecto.
+if os.environ.get('SITE_BEHIND_PROXY', '0') == '1':
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Con el sitio en HTTPS, las cookies de sesión y CSRF no viajan por HTTP.
+if URL_SCHEMA == 'https':
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 
 # Application definition
@@ -189,6 +231,7 @@ TEMPLATES = [
                 'apps.libredte.context_processors.current_contribuyente',
                 'apps.core.context_processors.menu_sections',
                 'apps.core.context_processors.settings_sections',
+                'apps.core.context_processors.app_version',
             ],
         },
     },
@@ -260,12 +303,16 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Destino de `collectstatic`. En producción los sirve el servidor web (no
+# la app), por eso es configurable: un volumen compartido con él.
+STATIC_ROOT = Path(os.environ.get('STATIC_ROOT', BASE_DIR / 'staticfiles'))
+
 
 # Media files (contenido subido por el usuario, ej. `Contribuyente.logo`)
 # https://docs.djangoproject.com/en/6.1/topics/files/
 
 MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = Path(os.environ.get('MEDIA_ROOT', BASE_DIR / 'media'))
 
 
 # Messages
@@ -412,3 +459,28 @@ EMISION_MASIVA_PDF_DIR = Path(
         BASE_DIR / 'storage' / 'emision_masiva/pdf',
     ),
 )
+
+
+# Logs a consola (stdout), que es de donde los recoge Docker. Nivel de
+# la app con `LOG_LEVEL`. Los errores 5xx de `django.request` salen con
+# su traza.
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': os.environ.get('LOG_LEVEL', 'INFO').upper(),
+    },
+}

@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.venv
+.mypy_cache
+.pytest_cache
+.ruff_cache
+__pycache__
+*.py[cod]
+db.sqlite3*
+media/
+staticfiles/
+storage/
+var/
+tmp/

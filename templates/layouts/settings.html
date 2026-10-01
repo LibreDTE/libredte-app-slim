@@ -60,8 +60,9 @@
     </main>
   </div>
 
-  <footer class="border-top py-3 mt-3 px-3 text-muted small">
-    &copy; {% now "Y" %} LibreDTE Slim.
+  <footer class="border-top py-3 mt-3 px-3 text-muted small d-flex justify-content-between">
+    <span>&copy; {% now "Y" %} LibreDTE Slim.</span>
+    {% if app_version %}<span title="{{ app_version_detail }}">{{ app_version }}</span>{% endif %}
   </footer>
 
   {% include "_assets_js.html" %}

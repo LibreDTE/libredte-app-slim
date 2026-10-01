@@ -29,8 +29,9 @@
   {% endblock %}
 
   <footer class="border-top py-3 mt-5 text-muted small">
-    <div class="container">
-      &copy; {% now "Y" %} LibreDTE Slim.
+    <div class="container d-flex justify-content-between">
+      <span>&copy; {% now "Y" %} LibreDTE Slim.</span>
+      {% if app_version %}<span title="{{ app_version_detail }}">{{ app_version }}</span>{% endif %}
     </div>
   </footer>
 

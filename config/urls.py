@@ -34,6 +34,7 @@ from drf_spectacular.views import (
 )
 
 from apps.core.forms import LoginForm
+from apps.core.views.health import health
 from apps.core.views.hub import (
     profile,
     profile_api_token_delete,
@@ -43,6 +44,7 @@ from apps.core.views.hub import (
 )
 
 urlpatterns = [
+    path('health/', health, name='health'),
     path('admin/', admin.site.urls),
     # Sobrescribe solo `login/` del include de abajo, por dos razones:
     # con sesión ya iniciada, ir directo a LOGIN_REDIRECT_URL en vez de
