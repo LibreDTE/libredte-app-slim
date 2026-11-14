@@ -94,9 +94,9 @@ _OPERACION_POR_CODIGO = {
 }
 
 # Debe cubrir el folio más alto entre los ejemplos de `document.examples`
-# (el listado de ejemplos de la biblioteca) — no es siempre "el siguiente" tras el
-# último, hay casos con folio manual fuera de secuencia a propósito (ej.
-# `033_018_folio_manual_asignado`, folio 123).
+# (el listado de ejemplos de la biblioteca) — no es siempre "el siguiente"
+# tras el último, hay casos con folio manual fuera de secuencia a propósito
+# (ej. `033_018_folio_manual_asignado`, folio 123).
 FOLIOS_POR_CAF_FICTICIO = 200
 
 # Glosas reales del SII para el estado de un envío, tal como las arma

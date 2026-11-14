@@ -451,7 +451,8 @@ class Item(models.Model):
         quita el IVA (19% fijo) — salvo que el ítem esté exento
         (`indicador_exencion`), donde bruto y neto son el mismo valor
         (no hay IVA que quitar). Misma fórmula que la
-        aplicación legacy, con la misma limitación: no considera `impuesto_adicional` al convertir.
+        aplicación legacy, con la misma limitación: no considera
+        `impuesto_adicional` al convertir.
         """
         if not self.bruto or self.indicador_exencion is not None:
             return self.precio
@@ -480,11 +481,12 @@ class Receptor(models.Model):
 
     Todo es opcional salvo `rut`/`dv`/`pais` (`save()` deja `pais` en
     Chile si no se especifica otro) — un receptor puede crearse con
-    datos incompletos y completarse después. Para un receptor
-    extranjero, `comuna` queda vacía y se usan `ciudad`/`pais` en su
-    lugar — el SII no exige comuna para extranjeros. `es_extranjero`
-    (`pais` distinto de Chile) es la señal que usa el resto del código
-    para elegir entre uno u otro. `numero_identificacion` es el
+    datos incompletos y completarse después. `comuna` referencia una
+    comuna chilena; una comuna que no mapea al catálogo se conserva en
+    `ciudad` si el documento no trae una ciudad explícita. Al construir
+    el DTE, `CmnaRecep` usa la comuna chilena o, en su ausencia, la ciudad.
+    `es_extranjero` indica si `pais` es distinto de Chile.
+    `numero_identificacion` es el
     `NumId` del SII: el documento de identidad del receptor en su país
     de origen, solo relevante (y solo enviado al SII) en una
     exportación (33/34/39/41 no lo usan, solo 110/111/112). Sus datos

@@ -223,6 +223,9 @@ def _resolver_receptor(
     planas en el de `draft_from_form()` (`_receptor_payload_plano()`,
     `form.estandar` no tiene ese nodo) — se acepta cualquiera de las
     dos formas.
+
+    Si `CmnaRecep` no corresponde a una comuna chilena, se conserva en
+    `ciudad` cuando no viene `CiudadRecep`.
     """
     rut, dv = _rut_dv(receptor_data['RUTRecep'])
     codigo_interno = receptor_data.get('CdgIntRecep') or ''
@@ -254,7 +257,11 @@ def _resolver_receptor(
         'correo': receptor_data.get('CorreoRecep') or '',
         'direccion': receptor_data.get('DirRecep') or '',
         'comuna': comuna,
-        'ciudad': receptor_data.get('CiudadRecep') or '',
+        'ciudad': (
+            receptor_data.get('CiudadRecep')
+            or (receptor_data.get('CmnaRecep') if comuna is None else '')
+            or ''
+        ),
         'pais': pais,
         'numero_identificacion': numero_identificacion,
     }
@@ -573,6 +580,8 @@ def _receptor_payload_plano(receptor: Receptor) -> dict[str, Any]:
         payload['CorreoRecep'] = receptor.correo
     if receptor.comuna:
         payload['CmnaRecep'] = receptor.comuna.glosa
+    elif receptor.ciudad:
+        payload['CmnaRecep'] = receptor.ciudad
     if receptor.ciudad:
         payload['CiudadRecep'] = receptor.ciudad
     if receptor.es_extranjero:
@@ -611,10 +620,9 @@ def _receptor_payload(receptor: Receptor) -> dict[str, Any]:
     """
     `Encabezado.Receptor` desde un `Receptor` ya persistido.
 
-    Un receptor extranjero no tiene `comuna` (`ciudad`/`pais` en su
-    lugar, ver docstring de `Receptor`) — el nodo `Extranjero` solo se
-    agrega en ese caso, igual que en un DTE real, o si el receptor tiene
-    su número de identificación (`NumId`), que puede venir sin
+    `CmnaRecep` usa la comuna chilena o, si no hay una, la ciudad.
+    El nodo `Extranjero` se agrega si el país no es Chile o si el
+    receptor tiene su número de identificación (`NumId`), que puede venir sin
     nacionalidad (ej. una exportación cargada por planilla, que no
     tiene esa columna).
     """
@@ -632,6 +640,8 @@ def _receptor_payload(receptor: Receptor) -> dict[str, Any]:
         payload['CorreoRecep'] = receptor.correo
     if receptor.comuna:
         payload['CmnaRecep'] = receptor.comuna.glosa
+    elif receptor.ciudad:
+        payload['CmnaRecep'] = receptor.ciudad
     if receptor.es_extranjero:
         payload['Extranjero'] = {'Nacionalidad': receptor.pais.codigo}
     if receptor.numero_identificacion:

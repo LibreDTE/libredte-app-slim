@@ -1,10 +1,11 @@
 """
 Servicio: envío de un DTE emitido al SII y consulta de su estado.
 
-Único módulo que llama a `integration.sii_dte` del SDK — nada fuera de
-`services/*.py` debe tocarlo directamente (`document.dispatcher`
-también lo usa `document_receiver.py`, para el sentido inverso: cargar
-un sobre recibido en vez de armar uno para enviar).
+Único módulo que llama a `integration.sii_dte`/`integration.sii_boleta`
+del SDK — nada fuera de `services/*.py` debe tocarlos directamente
+(`document.dispatcher` también lo usa `document_receiver.py`, para
+el sentido inverso: cargar un sobre recibido en vez de armar uno para
+enviar).
 
 Con un certificado de prueba (autofirmado, ej.
 `certificate_manager.create_fake_certificate`) el envío real al SII
@@ -20,6 +21,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
+from libredte_lib_sdk.billing.common import SII_RUT
 from libredte_lib_sdk.billing.enums import SiiEnvironment
 from libredte_lib_sdk.exceptions import LibreDteSdkError
 
@@ -33,7 +35,10 @@ from ..models import DteEmitido
 
 def send(documento: DteEmitido) -> DteEmitido:
     """
-    Envía `documento` al SII: arma el sobre `EnvioDTE` y lo envía.
+    Envía `documento` al SII con el SII como receptor del sobre.
+
+    Las boletas (39/41) se envían por `sii_boleta`; los demás DTE,
+    por `sii_dte`.
 
     Requiere que `documento.track_id` sea `None` — un documento ya
     enviado no se reenvía (usar `check_status()` para consultar su
@@ -67,8 +72,16 @@ def send(documento: DteEmitido) -> DteEmitido:
                     **_autorizacion_dte_extra(contribuyente),
                 },
             )
-            sobre = backend.billing.document.dispatcher.create(bag)
-            resultado = backend.billing.integration.sii_dte.send(
+            sobre = backend.billing.document.dispatcher.create(
+                bag,
+                receptor_rut=SII_RUT,
+            )
+            servicio = (
+                backend.billing.integration.sii_boleta
+                if documento.tipo_dte.codigo in (39, 41)
+                else backend.billing.integration.sii_dte
+            )
+            resultado = servicio.send(
                 sobre.xml_base64,
                 certificate=certificate,
                 company_rut=_company_rut(contribuyente),
@@ -89,6 +102,9 @@ def check_status(documento: DteEmitido) -> DteEmitido:
     """
     Consulta al SII el estado del envío de `documento`.
 
+    Las boletas (39/41) se consultan por `sii_boleta`; los demás DTE,
+    por `sii_dte`.
+
     Requiere que ya se haya enviado (`documento.track_id` no `None`).
     Actualiza `revision_estado`/`revision_detalle` con lo que devuelva
     el SII, siempre en el mismo formato (`"CÓDIGO - glosa"`) que espera
@@ -103,7 +119,12 @@ def check_status(documento: DteEmitido) -> DteEmitido:
 
     try:
         with get_backend(contribuyente) as backend:
-            resultado = backend.billing.integration.sii_dte.check_status(
+            servicio = (
+                backend.billing.integration.sii_boleta
+                if documento.tipo_dte.codigo in (39, 41)
+                else backend.billing.integration.sii_dte
+            )
+            resultado = servicio.check_status(
                 documento.track_id,
                 certificate=certificate,
                 company_rut=_company_rut(contribuyente),

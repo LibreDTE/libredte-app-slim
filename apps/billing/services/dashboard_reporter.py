@@ -62,10 +62,10 @@ def _documentos_de_ventas(
 _CODIGOS_REPARO = ('RLV', 'RPR')
 
 # Códigos SII de rechazo definitivo de un envío, tal como los mapea
-# `libredte-lib-core` para los estados de envío del SII — un documento rechazado no es lo mismo
-# que uno con reparos leves (`_CODIGOS_REPARO`): un reparo se acepta
-# igual, un rechazo no se timbró ante el SII y necesita corregirse y
-# reemitirse.
+# `libredte-lib-core` para los estados de envío del SII — un documento
+# rechazado no es lo mismo que uno con reparos leves (`_CODIGOS_REPARO`):
+# un reparo se acepta igual, un rechazo no se timbró ante el SII y necesita
+# corregirse y reemitirse.
 _CODIGOS_RECHAZO = ('RSC', 'RCH', 'RPT', 'RFR', 'VOF', 'RCT')
 
 # `Q` equivalente a `_esta_rechazado()`, para la alerta global
