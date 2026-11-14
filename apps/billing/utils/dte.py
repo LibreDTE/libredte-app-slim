@@ -15,8 +15,8 @@ def montos_en_clp(
 
     `Totales` trae los montos en la moneda propia del documento — para
     la generalidad de los DTE esa moneda ya es CLP (`TpoMoneda` ni
-    siquiera viene informado, ver `AbstractDocument::getMoneda()` en
-    libredte-lib-core, que asume 'PESO CL' por defecto). Solo
+    siquiera viene informado, la biblioteca libredte-lib-core
+    asume 'PESO CL' por defecto). Solo
     exportación (110/111/112) puede venir en otra moneda; en ese caso
     el equivalente en CLP viene en el nodo `OtraMoneda` (`TpoCambio` +
     montos ya multiplicados), calculado por la API — acá no se hace

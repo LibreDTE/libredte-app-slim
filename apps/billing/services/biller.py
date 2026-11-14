@@ -118,7 +118,7 @@ def draft_from_form(
     (`request.POST`, con listas para los campos repetibles de
     `Detalle`/`Referencia`) y se pasa server-side con
     `options={'parser': {'strategy': 'form.estandar'}}`: es esa
-    estrategia (`EstandarParserStrategy` en `libredte-lib-core`, no
+    estrategia (la de `libredte-lib-core`, no
     Slim) quien arma toda la estructura `Encabezado`/`Detalle` y
     calcula neto/IVA/total.
 
@@ -333,7 +333,7 @@ def bill_draft(borrador: Borrador, *, folio: int | None = None) -> DteEmitido:
     de la biblioteca (`caf_manager.reserve_folio()`) en vez de pedirle
     "el siguiente" al CAF — necesario porque `_resolver_referencias()`
     busca el documento referenciado por su folio real, y ese folio ya
-    viene decidido por la biblioteca (ver `ExamplesWorker::list()` en
+    viene decidido por la biblioteca (ver el listado de ejemplos de
     libredte-lib-core). La emisión real (`/billing/emitir`) nunca lo
     pasa: ahí el folio siempre lo decide el CAF (`reserve_next_folio()`).
     """
@@ -533,8 +533,7 @@ def _emisor_payload_plano(contribuyente: Contribuyente) -> dict[str, Any]:
 
     Sin nodo `Emisor` anidado — es lo que espera `form.estandar`. El
     teléfono es la excepción de nombre: `form.estandar` lee la entrada
-    como `TelefonoEmisor` (no `Telefono`, a diferencia del XML final —
-    ver `EstandarParserStrategy::setInitialDTE()`).
+    como `TelefonoEmisor` (no `Telefono`, a diferencia del XML final).
     """
     payload: dict[str, Any] = {
         'RUTEmisor': f'{contribuyente.rut}-{contribuyente.dv}',
@@ -558,8 +557,7 @@ def _receptor_payload_plano(receptor: Receptor) -> dict[str, Any]:
     Mismos datos que `_receptor_payload()`, en llaves planas.
 
     `form.estandar` no tiene un nodo `Extranjero` anidado, usa
-    `Nacionalidad` directo (ver
-    `EstandarParserStrategy::addExportData()`).
+    `Nacionalidad` directo.
     """
     payload: dict[str, Any] = {
         'RUTRecep': f'{receptor.rut}-{receptor.dv}',

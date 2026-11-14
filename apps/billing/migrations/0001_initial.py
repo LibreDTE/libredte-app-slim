@@ -173,7 +173,7 @@ class Migration(migrations.Migration):
                     "glosa_corta",
                     models.CharField(
                         blank=True,
-                        help_text='Se autocompleta desde `glosa` al guardar si se deja vacío — mismo criterio que `CodigoDocumento::getNombreCorto()` en libredte-lib-core (Document/Enum): sacar el sufijo " Electrónica" de la glosa oficial del SII.',
+                        help_text='Se autocompleta desde `glosa` al guardar si se deja vacío — mismo criterio que usa libredte-lib-core para el nombre corto del tipo de documento: sacar el sufijo " Electrónica" de la glosa oficial del SII.',
                         max_length=50,
                     ),
                 ),
@@ -614,7 +614,7 @@ class Migration(migrations.Migration):
                     "fecha_vencimiento",
                     models.DateField(
                         blank=True,
-                        help_text="Null si el tipo de documento no vence (ver Caf::hasVencimiento() en libredte-lib-core).",
+                        help_text="Null si el tipo de documento no vence (criterio de libredte-lib-core).",
                         null=True,
                     ),
                 ),

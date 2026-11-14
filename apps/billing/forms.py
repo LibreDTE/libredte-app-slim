@@ -1048,7 +1048,7 @@ class DocumentoForm(forms.Form):
 
 
 class ItemForm(forms.Form):
-    """Una fila de `Detalle` — ver `EstandarParserStrategy::addDetails()`."""
+    """Una fila de `Detalle` del formato estándar de la biblioteca."""
 
     TpoCodigo = forms.CharField(
         max_length=10,

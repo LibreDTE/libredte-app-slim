@@ -62,8 +62,7 @@ def _documentos_de_ventas(
 _CODIGOS_REPARO = ('RLV', 'RPR')
 
 # Códigos SII de rechazo definitivo de un envío, tal como los mapea
-# `EstadoEnvioSii::RECHAZADOS` en `libredte-lib-core` (`Package/Billing
-# /Component/Integration/Enum`) — un documento rechazado no es lo mismo
+# `libredte-lib-core` para los estados de envío del SII — un documento rechazado no es lo mismo
 # que uno con reparos leves (`_CODIGOS_REPARO`): un reparo se acepta
 # igual, un rechazo no se timbró ante el SII y necesita corregirse y
 # reemitirse.

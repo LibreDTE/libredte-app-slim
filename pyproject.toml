@@ -19,7 +19,7 @@ dependencies = [
   "djangorestframework-tabulator==0.1.*",
   "python-dotenv",
   # Validación/formato de RUT chileno. Cero dependencias propias,
-  # mantenida activamente (ver CLAUDE.md).
+  # mantenida activamente.
   "rutificador",
   # Driver de Postgres (ver `DB_ENGINE` en `config/settings.py`) —
   # siempre instalado para que activar Postgres sea solo cambiar env

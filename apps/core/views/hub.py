@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 _SESSION_PENDING_SECRET = 'core_2fa_pending_secret'
 
 # Tarjetas del perfil a las que vuelve cada operación (contrato de
-# `Tabs`, ver CLAUDE.md: `#pestaña:tarjeta`).
+# `Tabs`: `#pestaña:tarjeta`).
 _CARD_2FA = '#security:2fa'
 _CARD_TOKEN = '#api:token'
 

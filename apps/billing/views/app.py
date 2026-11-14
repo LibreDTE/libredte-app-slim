@@ -455,8 +455,7 @@ class ReceptorDeleteView(
 
 # Campos de `Detalle`/`Referencia`/`MntPagos` que `form.estandar`
 # espera como arrays paralelos (un valor por fila, ver
-# `EstandarParserStrategy::addDetails()`/`addReferences()`/
-# `addScheduledPayment()` en libredte-lib-core) — uno por `FormSet` de
+# el parser `form.estandar` de libredte-lib-core) — uno por `FormSet` de
 # `/billing/emitir` (ver `forms.py`). `_form_data_from_forms()` es el
 # único lugar que necesita esta lista.
 _CAMPOS_ITEM = [

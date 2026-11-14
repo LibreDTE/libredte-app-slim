@@ -278,8 +278,8 @@ class TipoDte(models.Model):
         blank=True,
         help_text=(
             'Se autocompleta desde `glosa` al guardar si se deja vacío '
-            '— mismo criterio que `CodigoDocumento::getNombreCorto()` '
-            'en libredte-lib-core (Document/Enum): sacar el sufijo '
+            '— mismo criterio que usa libredte-lib-core para el nombre '
+            'corto del tipo de documento: sacar el sufijo '
             '" Electrónica" de la glosa oficial del SII.'
         ),
     )
@@ -361,8 +361,8 @@ class Item(models.Model):
     define su propio enum (mismo patrón que `TipoDte.Categoria`).
 
     `precio` es el valor tal como se ingresó — puede ser neto o bruto
-    según `bruto` (mismo par de campos que legacy, `Model_Item::
-    $precio`/`$bruto`); usar `precio_neto` para obtener siempre el
+    según `bruto` (mismo par de campos que la aplicación
+    legacy); usar `precio_neto` para obtener siempre el
     valor neto, que es lo que espera `Detalle.PrcItem`.
     """
 
@@ -450,9 +450,8 @@ class Item(models.Model):
         Si `bruto` es `False`, `precio` ya es neto. Si es `True`, se le
         quita el IVA (19% fijo) — salvo que el ítem esté exento
         (`indicador_exencion`), donde bruto y neto son el mismo valor
-        (no hay IVA que quitar). Misma fórmula que legacy
-        (`Model_Item::getPrecio()`/`getPrecioBruto()`), con la misma
-        limitación: no considera `impuesto_adicional` al convertir.
+        (no hay IVA que quitar). Misma fórmula que la
+        aplicación legacy, con la misma limitación: no considera `impuesto_adicional` al convertir.
         """
         if not self.bruto or self.indicador_exencion is not None:
             return self.precio
@@ -659,8 +658,8 @@ class CafFolio(models.Model):
 
 
 # IDK -> ambiente real del SII que emitió el CAF (ver
-# `SiiEnvironment::CAF_IDKS` en libredte-lib-core). El IDK 666
-# (`CafFaker::IDK`, misma biblioteca) marca un CAF ficticio y a
+# el mapa de IDK de ambientes del SII en libredte-lib-core). El IDK 666
+# (el de los CAF ficticios de la misma biblioteca) marca un CAF ficticio y a
 # propósito no aparece acá — `.get()` devuelve `None` para ese caso.
 _AMBIENTE_POR_IDK = {
     300: SiiEnvironment.PRODUCTION,
@@ -672,9 +671,9 @@ def _diferencia_calendario(desde: date, hasta: date) -> tuple[int, int, int]:
     """
     (años, meses, días) de calendario entre `desde` y `hasta`.
 
-    Mismo algoritmo que `DateTime::diff()` de PHP (lo que usa
-    `Caf::getMesesAutorizacion()` en libredte-lib-core): resta de
-    calendario real, no meses fijos de 30 días.
+    Mismo algoritmo que usa libredte-lib-core para los meses de
+    autorización de un CAF: resta de calendario real, no meses fijos de
+    30 días.
     """
     anios = hasta.year - desde.year
     meses = hasta.month - desde.month
@@ -726,8 +725,8 @@ class Caf(XmlBase64Mixin, models.Model):
         null=True,
         blank=True,
         help_text=(
-            'Null si el tipo de documento no vence (ver '
-            'Caf::hasVencimiento() en libredte-lib-core).'
+            'Null si el tipo de documento no vence (criterio de '
+            'libredte-lib-core).'
         ),
     )
     idk = models.IntegerField(
@@ -753,7 +752,7 @@ class Caf(XmlBase64Mixin, models.Model):
     @property
     def codigo(self) -> str:
         """
-        Igual a `Caf::getId()` en libredte-lib-core.
+        Mismo identificador que arma libredte-lib-core para un CAF.
 
         Se llama `codigo` (no `id`) porque ese nombre ya lo ocupa la PK
         autogenerada del modelo — mismo criterio que `TipoDte.codigo`/
@@ -763,14 +762,14 @@ class Caf(XmlBase64Mixin, models.Model):
 
     @property
     def vigente(self) -> bool:
-        """Igual a `Caf::isVigente()` en libredte-lib-core, contra hoy."""
+        """Si el CAF está vigente hoy, igual que en libredte-lib-core."""
         if self.fecha_vencimiento is None:
             return True
         return timezone.localdate() < self.fecha_vencimiento
 
     @property
     def meses_autorizacion(self) -> float:
-        """Igual a `Caf::getMesesAutorizacion()` en libredte-lib-core."""
+        """Meses desde la autorización, igual que en libredte-lib-core."""
         anios, meses, dias = _diferencia_calendario(
             self.fecha_autorizacion,
             timezone.localdate(),
@@ -785,14 +784,14 @@ class Caf(XmlBase64Mixin, models.Model):
         """
         Ambiente del SII que emitió este CAF, resuelto desde `idk`.
 
-        Igual a `Caf::getEnvironment()` en libredte-lib-core — `None`
-        para un CAF ficticio o un IDK no reconocido.
+        Mismo criterio que libredte-lib-core — `None` para un CAF
+        ficticio o un IDK no reconocido.
         """
         return _AMBIENTE_POR_IDK.get(self.idk)
 
     @property
     def certificacion(self) -> int | None:
-        """Igual a `Caf::getCertificacion()`: el valor plano de `ambiente`."""
+        """Valor plano de `ambiente`."""
         return self.ambiente.value if self.ambiente is not None else None
 
 

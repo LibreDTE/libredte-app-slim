@@ -936,8 +936,8 @@
 
       // "Pago programado" solo tiene sentido para venta a crédito
       // (FmaPago=2) — mismo criterio que usa el parser server-side
-      // (`EstandarParserStrategy::addScheduledPayment()`) para decidir
-      // si arma `MntPagos`.
+      // (parser `form.estandar` de la biblioteca) para decidir si arma
+      // `MntPagos`.
       var selectFmaPago = document.getElementById('id_FmaPago');
       var seccionesPorFormaPago = document.querySelectorAll('[data-solo-forma-pago]');
 

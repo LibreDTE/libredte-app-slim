@@ -94,18 +94,16 @@ _OPERACION_POR_CODIGO = {
 }
 
 # Debe cubrir el folio más alto entre los ejemplos de `document.examples`
-# (`ExamplesWorker::list()`) — no es siempre "el siguiente" tras el
+# (el listado de ejemplos de la biblioteca) — no es siempre "el siguiente" tras el
 # último, hay casos con folio manual fuera de secuencia a propósito (ej.
 # `033_018_folio_manual_asignado`, folio 123).
 FOLIOS_POR_CAF_FICTICIO = 200
 
 # Glosas reales del SII para el estado de un envío, tal como las arma
-# `CheckXmlDocumentSentStatusResponse::getReviewStatus()` en
-# `libredte-lib-core` (`Package/Billing/Component/Integration`) — no son
-# texto propio de esta app. `ESTADO_ACEPTADO` está confirmado literal
-# contra el SII real en
-# `CheckXmlDocumentSentStatusTest::testUploadStatusEpr()`;
-# `ESTADO_CON_REPAROS` es el literal que arma ese mismo método cuando el
+# la biblioteca `libredte-lib-core` al consultar el estado de un envío —
+# no son texto propio de esta app. `ESTADO_ACEPTADO` está confirmado
+# literal contra el SII real en un test de integración de la biblioteca;
+# `ESTADO_CON_REPAROS` es el literal que arma la biblioteca cuando el
 # envío tiene reparos, aunque esa rama no tiene un test de integración
 # real capturado.
 ESTADO_ACEPTADO = 'EPR - Envio Procesado'
@@ -473,7 +471,7 @@ def _seed() -> None:
 
     # Todos los ejemplos disponibles para los tipos de DTE que soporta
     # esta app (ver `CODIGOS_DTE_ELECTRONICOS`) — orden tal cual lo
-    # entrega la API (`ExamplesWorker::list()` en libredte-lib-core):
+    # entrega la API (listado de ejemplos de libredte-lib-core):
     # ya garantiza que cada ejemplo aparece después de los ejemplos de
     # los que depende (`Test.DependsOn`, ej. una Nota de Crédito
     # después de la Factura que anula), no hay que reordenar nada acá.

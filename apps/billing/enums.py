@@ -11,8 +11,8 @@ una lista fija así, va acá, no repetido inline en un template.
 
 `IndicadorServicio` es un caso especial: el valor que se manda en
 `IndServicio` NO corresponde a ningún schema XSD en particular — es el
-vocabulario de entrada que `EstandarParserStrategy::addServiceIndicator()`
-espera, y esa misma clase es quien decide server-side qué valor final
+vocabulario de entrada que espera el parser `form.estandar` de la
+biblioteca, y ese parser es quien decide server-side qué valor final
 es válido según el `TipoDTE` (invierte 1↔2 en boletas, filtra 4/5 fuera
 de exportación, etc.). Por eso acá se listan las 5 opciones completas,
 sin filtrar por tipo de documento — el filtrado ya lo hace la librería.

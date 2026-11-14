@@ -255,8 +255,8 @@ def reserve_folio(
     `siguiente` avanza a `max(siguiente, folio + 1)`, nunca solo a
     `folio + 1`: los folios pueden pedirse fuera de orden (ej. un
     ejemplo con folio 6 puede procesarse antes que uno con folio 2, si
-    el primero es dependencia de un tercero — ver `ExamplesWorker
-    ::list()` en libredte-lib-core), y `siguiente` tiene que terminar
+    el primero es dependencia de un tercero — ver el listado de
+    ejemplos de libredte-lib-core), y `siguiente` tiene que terminar
     por delante de todos los folios ya usados para que una reserva
     posterior vía `reserve_next_folio()` nunca choque con uno de ellos
     — avanzar solo cuando `folio == siguiente` deja atrás folios ya

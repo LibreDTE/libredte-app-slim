@@ -64,8 +64,8 @@ def _libredte_data(
     `logo` del emisor para la plantilla, si corresponde.
 
     No es un dato del XML del SII, la librería lo agrega vía
-    `libredte_data['extra']['dte']` (ver `Emisor::setLogo()`/
-    `estandar.html.twig` en `libredte-lib-core`). Un `DteEmitido`/
+    `libredte_data['extra']['dte']` (ver la plantilla estándar de
+    renderizado de `libredte-lib-core`). Un `DteEmitido`/
     `Borrador` usa el logo de `contribuyente` (el emisor real, somos
     nosotros). Un `DteRecibido` no: el emisor real es un tercero
     (`Emisor`), que no guarda logo — se renderiza sin logo, la

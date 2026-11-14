@@ -379,7 +379,7 @@ def test_caf_codigo_matches_caf_getid_format(
     contribuyente: Contribuyente,
     tipo_factura: TipoDte,
 ) -> None:
-    """Mismo formato que `Caf::getId()` en libredte-lib-core."""
+    """Mismo formato de identificador que libredte-lib-core."""
     caf = Caf.objects.create(
         contribuyente=contribuyente,
         tipo_dte=tipo_factura,
@@ -445,7 +445,7 @@ def test_caf_meses_autorizacion_uses_calendar_months_not_fixed_30_days(
     tipo_factura: TipoDte,
 ) -> None:
     """
-    Igual que `Caf::getMesesAutorizacion()` en libredte-lib-core: meses
+    Igual que los meses de autorización de libredte-lib-core: meses
     de calendario, no bloques fijos de 30 días — de 2026-01-15 a
     2026-03-20 son 2 meses y 5 días (2 + round(5/30, 2) = 2.17), no un
     cálculo por bloques fijos de 30 días.
@@ -471,7 +471,7 @@ def test_caf_ambiente_and_certificacion_are_none_for_a_fake_idk(
     contribuyente: Contribuyente,
     tipo_factura: TipoDte,
 ) -> None:
-    """`CafFaker::IDK` (666) en libredte-lib-core no es un ambiente real."""
+    """El IDK 666 de los CAF ficticios no es un ambiente real."""
     caf = Caf.objects.create(
         contribuyente=contribuyente,
         tipo_dte=tipo_factura,
